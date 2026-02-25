@@ -109,6 +109,9 @@ if IS_PRODUCTION and os.environ.get('CLOUDINARY_CLOUD_NAME'):
         'TIMEOUT': 120, 
     }
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STATIC_URL = '/static/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     MEDIA_URL = ''
     print("=" * 60)
     print(f"🌍 IS_PRODUCTION: True")
@@ -118,6 +121,9 @@ else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    STATIC_URL = '/static/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     print("=" * 60)
     print(f"🌍 IS_PRODUCTION: False")
     print(f"📦 STORAGE: FileSystemStorage (Local)")
@@ -138,14 +144,14 @@ USE_I18N = True
 USE_TZ = True
 
 # STATIC
-STATIC_URL = '/static/'
+"""STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # CORRECTION : Utiliser le bon storage pour Whitenoise
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 else:
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' """
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True  # En dev
