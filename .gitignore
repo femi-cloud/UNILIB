@@ -27,5 +27,7 @@ dist-ssr
 .env.production
 .env.local
 
+unilib_backend\.env
+
 unilib_backend/media/
 UNILIB.zip

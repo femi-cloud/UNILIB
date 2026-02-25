@@ -2,14 +2,17 @@ from pathlib import Path
 import os
 import dj_database_url
 from datetime import timedelta
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(os.path.join(BASE_DIR, '.env')) 
 
 # DETECT ENVIRONMENT
 IS_PRODUCTION = os.environ.get('DATABASE_URL') is not None
 
 # SECURITY
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-86b)3&-!l6qznivfq1ja%#y2aru2=+%)@unv#1&a$#r70cjs5@')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -175,7 +178,13 @@ if USE_B2_STORAGE:
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+    
+    # CORRECTION : Ajouter https:// si absent
+    endpoint = os.environ.get('AWS_S3_ENDPOINT_URL', '')
+    if endpoint and not endpoint.startswith('http'):
+        endpoint = f'https://{endpoint}'
+    AWS_S3_ENDPOINT_URL = endpoint
+    
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-central-003')
     
     # Configuration d'accès
