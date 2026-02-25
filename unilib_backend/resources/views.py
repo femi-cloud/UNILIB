@@ -3,11 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Resource, CoursPratique, EmploiDuTemps
 from .serializers import ResourceSerializer, CoursPratiqueSerializer, EmploiDuTempsSerializer
-from django.core.files.storage import default_storage 
 import traceback
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class ResourceViewSet(viewsets.ModelViewSet):
@@ -18,64 +14,83 @@ class ResourceViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 
-from rest_framework import serializers
-from .models import Resource, CoursPratique, EmploiDuTemps
-import os
-from datetime import timedelta
 
 class CoursPratiqueViewSet(viewsets.ModelViewSet):
     queryset = CoursPratique.objects.all()
     serializer_class = CoursPratiqueSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    # CORRECTION : Permissions différentes selon l'action
+    def get_permissions(self):
+        """
+        Tout le monde peut voir (GET), seuls admin/responsable peuvent créer/modifier/supprimer
+        """
+        if self.action in ['list', 'retrieve']:
+            # GET - Accessible à tous les utilisateurs authentifiés
+            return [permissions.IsAuthenticated()]
+        else:
+            # POST, PUT, PATCH, DELETE - Uniquement admin
+            return [permissions.IsAdminUser()]
     
     def get_queryset(self):
-        # Seuls les cours de l'utilisateur connecté
-        return CoursPratique.objects.filter(uploaded_by=self.request.user)
+        queryset = CoursPratique.objects.all()
+        difficulte = self.request.query_params.get('difficulte')
+        if difficulte:
+            queryset = queryset.filter(difficulte=difficulte)
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        print("=" * 60)
+        print(f"📝 Création cours pratique par {request.user.email}")
+        print(f"📦 Données reçues:")
+        for key, value in request.data.items():
+            if hasattr(value, 'size'):
+                print(f"  {key}: {value.name} ({value.size / 1024 / 1024:.2f} MB)")
+            else:
+                print(f"  {key}: {value}")
+        print("=" * 60)
+        
+        try:
+            serializer = self.get_serializer(data=request.data)
+            
+            if not serializer.is_valid():
+                print(f"❌ Erreurs validation: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            print("✅ Validation réussie")
+            self.perform_create(serializer)
+            
+            print(f"✅ Cours créé: {serializer.instance.titre}")
+            if serializer.instance.fichier_zip:
+                print(f"📎 Fichier uploadé: {serializer.instance.fichier_zip.url}")
+            
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except Exception as e:
+            print(f"❌ ERREUR CRÉATION COURS:")
+            print(f"   Type: {type(e).__name__}")
+            print(f"   Message: {str(e)}")
+            print(f"   Traceback:")
+            traceback.print_exc()
+            return Response(
+                {'detail': f'Erreur serveur: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
-    
-    @action(detail=True, methods=['get'], url_path='download-url')
-    def get_download_url(self, request, pk=None):
-        """
-        Génère une URL signée temporaire pour télécharger le ZIP
-        Valable 24h - bucket privé Backblaze
-        """
-        try:
-            course = self.get_object()
-            
-            if not course.fichier_zip:
-                return Response(
-                    {'error': 'Aucun fichier ZIP associé à ce cours'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # Générer URL signée via django-storages (automatique avec AWS_QUERYSTRING_AUTH=True)
-            file_path = course.fichier_zip.name
-            signed_url = default_storage.url(file_path)
-            
-            # Extraire le nom de fichier propre
-            filename = os.path.basename(file_path)
-            
-            return Response({
-                'download_url': signed_url,
-                'filename': filename,
-                'expires_in': 86400,  # 24 heures en secondes
-                'content_type': 'application/zip'
-            })
-            
-        except Exception as e:
-            logger.error(f"Erreur génération URL téléchargement {pk}: {str(e)}")
-            return Response(
-                {'error': 'Impossible de générer l\'URL de téléchargement'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
-    
+
 class EmploiDuTempsViewSet(viewsets.ModelViewSet):
     queryset = EmploiDuTemps.objects.all()
     serializer_class = EmploiDuTempsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    # Mêmes permissions que CoursPratique
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'actif']:
+            return [permissions.IsAuthenticated()]
+        else:
+            return [permissions.IsAdminUser()]
     
     @action(detail=False, methods=['get'])
     def actif(self, request):
