@@ -11,6 +11,18 @@ export const getCoursPratiques = async () => {
 
 export const uploadCoursPratique = async (formData: FormData) => {
   const token = localStorage.getItem('access_token');
+  
+  console.log('📤 Upload cours pratique...');
+  
+  // Log les données envoyées
+  for (let [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`${key}: ${value.name} (${value.size} bytes)`);
+    } else {
+      console.log(`${key}: ${value}`);
+    }
+  }
+  
   const response = await fetch(`${API_URL}/cours-pratiques/`, {
     method: 'POST',
     headers: {
@@ -19,8 +31,19 @@ export const uploadCoursPratique = async (formData: FormData) => {
     },
     body: formData,
   });
-  return handleResponse(response);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Erreur serveur' }));
+    console.error('❌ Erreur upload:', error);
+    throw new Error(error.detail || 'Upload échoué');
+  }
+  
+  const data = await response.json();
+  console.log('✅ Upload réussi:', data);
+  return data;
 };
+
+
 import { AppConfig } from '../config/appConfig';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || AppConfig.API_BASE_URL || 'http://127.0.0.1:8000/api';

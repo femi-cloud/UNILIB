@@ -30,8 +30,21 @@ class CoursPratiqueViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
-
+        print(f"📝 Création cours pratique par {self.request.user.email}")
+        print(f"📦 Données reçues: {self.request.data}")
+        
+        try:
+            instance = serializer.save(uploaded_by=self.request.user)
+            print(f"✅ Cours créé: {instance.titre}")
+            
+            if instance.fichier_zip:
+                print(f"📎 Fichier uploadé: {instance.fichier_zip.url}")
+            else:
+                print("⚠️ Aucun fichier ZIP uploadé")
+                
+        except Exception as e:
+            print(f"❌ Erreur création cours: {e}")
+            raise
 
 class EmploiDuTempsViewSet(viewsets.ModelViewSet):
     queryset = EmploiDuTemps.objects.all()

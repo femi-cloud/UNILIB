@@ -30,9 +30,12 @@ class CoursPratiqueSerializer(serializers.ModelSerializer):
     
     def get_fichier_zip_url(self, obj):
         if obj.fichier_zip:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.fichier_zip.url)
+            try:
+                # En production avec Cloudinary
+                if hasattr(obj.fichier_zip, 'url'):
+                    return obj.fichier_zip.url
+            except Exception as e:
+                print(f"⚠️ Erreur récupération URL: {e}")
         return None
     
     def get_uploaded_by_name(self, obj):
