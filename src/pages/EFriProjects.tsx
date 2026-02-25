@@ -19,6 +19,17 @@ const diffColors = {
   "Avancé": "bg-[#FFEBEE] text-destructive"
 };
 
+
+  // Mapping backend → frontend pour la difficulté
+const mapDifficulteFromBackend = (diff: string): string => {
+  const mapping: Record<string, string> = {
+    'debutant': 'Débutant',
+    'intermediaire': 'Intermédiaire',
+    'avance': 'Avancé',
+  };
+  return mapping[diff] || diff;
+};
+
 const EFriProjects = () => {
   const { user } = useSession();
   const { toast } = useToast();
@@ -32,7 +43,13 @@ const EFriProjects = () => {
         setLoading(true);
         try {
           const data = await getCoursPratiques();
-          setCours(data);
+
+          const transformedData = data.map((c: any) => ({
+          ...c,
+          difficulte: mapDifficulteFromBackend(c.difficulte),
+        }));
+
+          setCours(transformedData);
         } catch (err) {
           toast({ title: "Erreur", description: "Impossible de charger les cours pratiques.", variant: "destructive" });
         } finally {
@@ -105,6 +122,7 @@ const EFriProjects = () => {
     const count = parseInt(localStorage.getItem(key) || "0");
     localStorage.setItem(key, (count + 1).toString());
   };
+
 
   const handleAddCours = async () => {
     if (!newCours.titre || !newCours.description) {
@@ -484,33 +502,38 @@ const EFriProjects = () => {
                     )}
 
                     {/* Action */}
-                    <div className="pt-4">
-                      <button
-                        onClick={() => {
-                          trackDownload();
-                          if (selectedProject.zipUrl && selectedProject.zipUrl !== "#") {
-                            const link = document.createElement("a");
-                            link.href = selectedProject.zipUrl;
-                            link.download = `${selectedProject.titre}.zip`;
-                            link.click();
-                          } else {
-                            // Simulation for mock or missing ZIP
-                            const blob = new Blob(["Pack de cours simulation"], { type: "text/plain" });
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.download = `${selectedProject.titre}_pack.txt`;
-                            link.click();
-                          }
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-inter font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
-                      >
-                        <Download size={18} /> Télécharger les ressources (.zip)
-                      </button>
-                      <p className="font-inter text-[10px] text-muted-foreground text-center mt-3">
-                        Contient les slides, les énoncés de TP et les corrigés de référence.
-                      </p>
-                    </div>
+<div className="pt-4">
+  <button
+    onClick={() => {
+      trackDownload();
+      
+        // Utiliser fichier_zip_url du backend
+        const zipUrl = selectedProject.fichier_zip_url;
+        
+        if (zipUrl) {
+          // Ouvrir dans un nouvel onglet pour télécharger
+          window.open(zipUrl, '_blank');
+          
+          toast({
+            title: "Téléchargement démarré",
+            description: "Le fichier ZIP est en cours de téléchargement.",
+          });
+        } else {
+          toast({
+            title: "Fichier non disponible",
+            description: "Aucun pack de cours n'a été téléversé pour ce cours.",
+            variant: "destructive",
+          });
+        }
+      }}
+      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-inter font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
+    >
+      <Download size={18} /> Télécharger les ressources (.zip)
+    </button>
+    <p className="font-inter text-[10px] text-muted-foreground text-center mt-3">
+      Contient les slides, les énoncés de TP et les corrigés de référence.
+    </p>
+  </div>
                   </div>
                 </>
               )}
