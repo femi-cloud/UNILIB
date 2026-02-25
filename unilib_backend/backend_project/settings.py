@@ -160,3 +160,41 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    
+# BACKBLAZE B2 CONFIGURATION (pour fichiers ZIP)
+
+# Vérifier si Backblaze est configuré
+USE_B2_STORAGE = bool(os.environ.get('AWS_ACCESS_KEY_ID'))
+
+if USE_B2_STORAGE:
+    print("✅ Backblaze B2 activé pour les fichiers ZIP")
+    
+    # Configuration S3-compatible pour Backblaze B2
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-west-004')
+    
+    # Configuration d'accès public
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',  # 1 jour
+    }
+    
+    # Désactiver la signature de requête (Backblaze l'exige)
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_QUERYSTRING_AUTH = False
+    
+    # Custom domain (optionnel, pour des URLs plus propres)
+    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_ENDPOINT_URL}'
+    
+    print(f"📦 Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"🌍 Endpoint: {AWS_S3_ENDPOINT_URL}")
+else:
+    print("⚠️ Backblaze B2 non configuré, utilisation du stockage local")
+
+# INSTALLED APPS (ajoute storages si B2 est activé)
+
+if USE_B2_STORAGE and 'storages' not in INSTALLED_APPS:
+    INSTALLED_APPS.append('storages')
