@@ -508,7 +508,7 @@ const EFriProjects = () => {
       trackDownload();
       
         // Utiliser fichier_zip_url du backend
-        const zipUrl = selectedProject.fichier_zip_url;
+        const zipUrl = selectedProject.fichier_zip;
         
         if (zipUrl) {
           // Ouvrir dans un nouvel onglet pour télécharger

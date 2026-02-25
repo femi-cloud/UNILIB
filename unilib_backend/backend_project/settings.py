@@ -164,36 +164,34 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
-# BACKBLAZE B2 CONFIGURATION (pour fichiers ZIP)
+# BACKBLAZE B2 CONFIGURATION (bucket PRIVÉ - GRATUIT)
 USE_B2_STORAGE = bool(os.environ.get('AWS_ACCESS_KEY_ID'))
 
 if USE_B2_STORAGE:
-    print("✅ Backblaze B2 activé pour les fichiers ZIP")
+    print("✅ Backblaze B2 activé (bucket privé - GRATUIT)")
     
-    # Ajouter storages à INSTALLED_APPS
     if 'storages' not in INSTALLED_APPS:
         INSTALLED_APPS.append('storages')
     
-    # Configuration S3-compatible pour Backblaze B2
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     
-    # CORRECTION : Ajouter https:// si absent
-    endpoint = os.environ.get('AWS_S3_ENDPOINT_URL', '')
-    if endpoint and not endpoint.startswith('http'):
-        endpoint = f'https://{endpoint}'
-    AWS_S3_ENDPOINT_URL = endpoint
+    # Endpoint correct pour Backblaze (format requis)
+    region = os.environ.get('AWS_S3_REGION_NAME', 'eu-central-003')
+    AWS_S3_ENDPOINT_URL = f"https://s3.{region}.backblazeb2.com"
+    AWS_S3_REGION_NAME = region
     
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-central-003')
-    
-    # Configuration d'accès
-    AWS_DEFAULT_ACL = 'public-read'
+    # 🔑 CONFIGURATION SÉCURISÉE POUR BUCKET PRIVÉ
     AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False
+    AWS_QUERYSTRING_AUTH = True  # ✅ URLs signées obligatoires
     AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE = 'virtual'
+    AWS_DEFAULT_ACL = None  # ✅ NULL pour éviter l'erreur "canned acl"
+    AWS_QUERYSTRING_EXPIRE = 86400 
     
-    print(f"📦 Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"📦 Bucket: {AWS_STORAGE_BUCKET_NAME} (privé)")
     print(f"🌍 Endpoint: {AWS_S3_ENDPOINT_URL}")
+    print(f"🔒 URLs signées activées (AWS_QUERYSTRING_AUTH=True)")
 else:
     print("⚠️ Backblaze B2 non configuré")

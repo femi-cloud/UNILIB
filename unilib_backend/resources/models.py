@@ -6,20 +6,24 @@ import uuid
 # Fonction pour obtenir le storage approprié
 def get_file_storage():
     """Retourne le storage pour les fichiers standards (PDF, images)"""
-    if settings.IS_PRODUCTION and hasattr(settings, 'CLOUDINARY_STORAGE'):
+    if getattr(settings, 'IS_PRODUCTION', False) and hasattr(settings, 'CLOUDINARY_STORAGE'):
         try:
             from cloudinary_storage.storage import MediaCloudinaryStorage
             return MediaCloudinaryStorage()
-        except:
-            pass
+        except Exception as e:
+            print(f"⚠️ Erreur Cloudinary: {e}")
     from django.core.files.storage import FileSystemStorage
     return FileSystemStorage()
 
+
 def get_zip_storage():
     """Retourne le storage pour les fichiers ZIP (Backblaze B2)"""
-    if settings.USE_B2_STORAGE:
-        from .storage_backends import BackblazeB2Storage
-        return BackblazeB2Storage()
+    if getattr(settings, 'USE_B2_STORAGE', False):
+        try:
+            from .storage_backends import BackblazeB2Storage
+            return BackblazeB2Storage()
+        except Exception as e:
+            print(f"⚠️ Erreur B2 Storage: {e}")
     from django.core.files.storage import FileSystemStorage
     return FileSystemStorage()
 
