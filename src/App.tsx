@@ -20,6 +20,7 @@ import EFriProfile from "./pages/EFriProfile";
 import EFriAdmin from "./pages/EFriAdmin";
 import EFriForgotPassword from "./pages/EFriForgotPassword";
 import NotFound from "./pages/NotFound";
+import EFriGlobalSearch from "./pages/EFriGlobalSearch";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/e-fri/televerser" element={<EFriContribute />} />
               <Route path="/e-fri/profil" element={<EFriProfile />} />
               <Route path="/e-fri/admin" element={<EFriAdmin />} />
+              <Route path="/e-fri/search" element={<EFriGlobalSearch />} /> 
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

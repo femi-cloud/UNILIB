@@ -1,6 +1,14 @@
 # 📚 UNILIB — Bibliothèque Académique e-FRI(MVP Version 1.0)
 
-Plateforme centralisée de ressources académiques pour les étudiants et enseignants de l'IFRI (Institut de Formation et de Recherche en Informatique — UAC).
+Plateforme centralisée de ressources académiques destinée à l’ensemble des étudiants de l’Université d'Abomey-Calavi (UAC), facilitant l’accès aux supports de cours, documents pédagogiques et outils collaboratifs au sein des instituts de l’université.
+
+## Liens utiles
+
+Lien du cahier des charges : [Cahier des charges](https://docs.google.com/document/d/1sUvlyNgEHQm84dlpt3OQy4fFTZoAFhOnq76wpMOnKqw/edit?tab=t.0)
+
+Lien vers l'application : [Unilib App](https://unilib-win5.vercel.app)
+
+## Un glisser-deposer depuis votre file manager vers le readme dans github pour charger la video
 
 ## 🗂 Table des matières
 

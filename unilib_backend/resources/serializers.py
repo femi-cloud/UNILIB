@@ -53,9 +53,22 @@ class EmploiDuTempsSerializer(serializers.ModelSerializer):
     
     def get_fichier_pdf_url(self, obj):
         if obj.fichier_pdf:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.fichier_pdf.url)
+            try:
+                # ✅ RÉCUPÉRER L'URL COMPLÈTE
+                request = self.context.get('request')
+                
+                # Si c'est Cloudinary, l'URL est déjà complète
+                if 'cloudinary' in obj.fichier_pdf.url:
+                    return obj.fichier_pdf.url
+                
+                # Sinon construire l'URL absolue pour local
+                if request:
+                    return request.build_absolute_uri(obj.fichier_pdf.url)
+                
+                return obj.fichier_pdf.url
+                
+            except Exception as e:
+                print(f"⚠️ Erreur récupération URL PDF: {e}")
         return None
     
     def get_uploaded_by_name(self, obj):

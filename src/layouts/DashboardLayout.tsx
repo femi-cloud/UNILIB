@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, BookOpen, FolderKanban, Calendar, Bot, Upload, Settings, LogOut, Search, Bell, Menu, X, CheckCircle2, AlertCircle, Info, ArrowLeft } from "lucide-react";
 import EFriLogo from "@/components/EFriLogo";
-import { currentUser } from "@/data/mockData";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useSession } from "@/hooks/use-session";
+import { getNotifications, markNotificationRead } from "@/lib/api";
 
 const navItems = [
   { label: "Tableau de bord", icon: LayoutDashboard, path: "/e-fri/dashboard" },
@@ -16,7 +17,6 @@ const navItems = [
   { 
     label: "Administration", 
     icon: Settings, 
-    // URL dynamique selon l'environnement
     path: import.meta.env.VITE_API_URL 
       ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/admin` 
       : "http://127.0.0.1:8000/admin",
@@ -26,35 +26,49 @@ const navItems = [
   { label: "Paramètres", icon: Settings, path: "/e-fri/profil" },
 ];
 
-const initialNotifications = [];
-
-import { useSession } from "@/hooks/use-session";
-
 const DashboardLayout = () => {
-  const { user } = useSession();
+  const { user, logout } = useSession();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useSession();
+  
+  const [globalSearch, setGlobalSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  useEffect(() => {
-    const loadNotifs = () => {
-      const stored = localStorage.getItem("unilib_notifications");
-      if (stored) setNotifications(JSON.parse(stored));
-    };
-    loadNotifs();
-    // Refresh notifications every 2 seconds for a "live" feel in this offline demo
-    const interval = setInterval(loadNotifs, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const markAsRead = (id: number) => {
-    const updated = notifications.filter(n => n.id !== id);
-    setNotifications(updated);
-    localStorage.setItem("unilib_notifications", JSON.stringify(updated));
+  // ✅ RECHERCHE GLOBALE
+  const handleGlobalSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (globalSearch.trim()) {
+      navigate(`/e-fri/search?q=${encodeURIComponent(globalSearch.trim())}`);
+      setGlobalSearch("");
+    }
   };
+
+// Dans le composant
+useEffect(() => {
+  const loadNotifs = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  loadNotifs();
+  const interval = setInterval(loadNotifs, 30000); // 30s
+  return () => clearInterval(interval);
+}, []);
+
+const markAsRead = async (id: number) => {
+  try {
+    await markNotificationRead(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
   const handleLogout = () => {
     logout();
@@ -66,7 +80,6 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-muted/30 relative">
       <div className={`flex min-h-screen transition-all duration-300 ${showLogoutConfirm ? "blur-md scale-[0.98] pointer-events-none" : ""}`}>
-        {/* Mobile overlay */}
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
@@ -98,7 +111,7 @@ const DashboardLayout = () => {
             {navItems
               .filter(item => !item.roles || (user?.role && item.roles.includes(user.role)))
               .map((item) => {
-                const commonProps = {
+                const linkProps = {
                   key: item.path,
                   onClick: () => setSidebarOpen(false),
                   className: `flex items-center gap-3 px-3 py-2.5 rounded-lg font-inter text-sm transition-colors ${isActive(item.path)
@@ -110,7 +123,8 @@ const DashboardLayout = () => {
                 if (item.external) {
                   return (
                     <a
-                      {...commonProps}
+                    key={item.path}
+                      {...linkProps}
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -123,7 +137,8 @@ const DashboardLayout = () => {
 
                 return (
                   <Link
-                    {...commonProps}
+                  key={item.path}
+                    {...linkProps}
                     to={item.path}
                   >
                     <item.icon size={18} />
@@ -172,15 +187,19 @@ const DashboardLayout = () => {
               e-FRI / <span className="text-foreground">{navItems.find(n => isActive(n.path))?.label || "Page"}</span>
             </div>
 
-            <div className="flex-1 max-w-sm lg:max-w-md mx-auto px-2">
+            {/* ✅ RECHERCHE GLOBALE */}
+            <form onSubmit={handleGlobalSearch} className="flex-1 max-w-sm lg:max-w-md mx-auto px-2">
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
-                  placeholder="Rechercher..."
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary"
+                  type="text"
+                  placeholder="Rechercher partout..."
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary placeholder:text-muted-foreground"
                 />
               </div>
-            </div>
+            </form>
 
             <div className="flex items-center gap-3">
               <Popover>
@@ -197,30 +216,57 @@ const DashboardLayout = () => {
                 <PopoverContent className="w-80 p-0 mr-4" align="end">
                   <div className="p-4 border-b border-border flex items-center justify-between">
                     <h4 className="font-poppins font-bold text-sm">Notifications</h4>
-                    <button className="text-[10px] font-bold text-secondary uppercase tracking-wider hover:underline">Tout marquer comme lu</button>
+                    {notifications.length > 0 && (
+                      <button 
+                        onClick={async () => {
+                          for (const n of notifications) {
+                            await markNotificationRead(n.id);
+                          }
+                          setNotifications([]);
+                        }}
+                        className="text-[10px] font-bold text-secondary uppercase tracking-wider hover:underline"
+                      >
+                        Tout marquer comme lu
+                      </button>
+                    )}
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {notifications.length > 0 ? (
                       notifications.map((notif: any) => (
-                        <div key={notif.id} onClick={() => markAsRead(notif.id)} className="p-4 border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <div 
+                          key={notif.id} 
+                          onClick={() => markAsRead(notif.id)} 
+                          className="p-4 border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer group"
+                        >
                           <div className="flex gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'success' ? 'bg-primary/10 text-primary' :
-                              notif.type === 'warning' ? 'bg-accent/10 text-accent' : 'bg-secondary/10 text-secondary'
-                              }`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              notif.type === 'success' ? 'bg-primary/10 text-primary' :
+                              notif.type === 'warning' ? 'bg-accent/10 text-accent' : 
+                              'bg-secondary/10 text-secondary'
+                            }`}>
                               {notif.type === 'success' ? <CheckCircle2 size={16} /> :
-                                notif.type === 'warning' ? <AlertCircle size={16} /> : <Info size={16} />}
+                                notif.type === 'warning' ? <AlertCircle size={16} /> : 
+                                <Info size={16} />}
                             </div>
                             <div className="space-y-1">
-                              <p className="font-poppins font-semibold text-xs text-foreground leading-tight group-hover:text-secondary transition-colors">{notif.title}</p>
-                              <p className="font-inter text-[11px] text-muted-foreground line-clamp-2">{notif.description}</p>
-                              <p className="font-inter text-[9px] text-muted-foreground font-bold uppercase">{notif.time}</p>
+                              <p className="font-poppins font-semibold text-xs text-foreground leading-tight group-hover:text-secondary transition-colors">
+                                {notif.titre}
+                              </p>
+                              <p className="font-inter text-[11px] text-muted-foreground line-clamp-2">
+                                {notif.message}
+                              </p>
+                              <p className="font-inter text-[9px] text-muted-foreground font-bold uppercase">
+                                {new Date(notif.created_at).toLocaleString('fr-FR')}
+                              </p>
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="p-8 text-center">
-                        <p className="font-inter text-xs text-muted-foreground italic">Aucune notification pour le moment</p>
+                        <p className="font-inter text-xs text-muted-foreground italic">
+                          Aucune notification
+                        </p>
                       </div>
                     )}
                   </div>

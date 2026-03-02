@@ -51,6 +51,21 @@ const EFriDashboard = () => {
     fetchStats();
   }, [user]);
 
+  // Après le premier useEffect, ajoutez :
+useEffect(() => {
+  // Rafraîchir les stats toutes les 30 secondes
+  const interval = setInterval(async () => {
+    try {
+      const data = await getDashboardStats();
+      setStats(data);
+    } catch (error) {
+      // Silencieux en arrière-plan
+    }
+  }, 30000); // 30 secondes
+
+  return () => clearInterval(interval);
+}, [user]);
+
   // Fonctions fallback (localStorage) si l'API échoue
   const getLocalResourceCount = () => {
     const stored = JSON.parse(localStorage.getItem("unilib_resources") || "[]");

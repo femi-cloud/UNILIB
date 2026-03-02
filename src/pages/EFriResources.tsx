@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Download, FileText, Grid, List, Search, Clock, Trash2 } from "lucide-react";
+import { Download, FileText, Grid, List, Search, Clock, Trash2, Loader2 } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import { getResources, deleteResource } from "@/lib/api";
@@ -26,9 +26,7 @@ const promotions = ["Tous", "L1", "L2", "L3"];
 const semestres = ["Tous", "S1", "S2"];
 const types = ["Tous", "Cours", "TD", "TP", "Examen", "Rattrapage", "Correction"];
 
-// ─────────────────────────────────────────────────────────────
 // MAPPING BACKEND → FRONTEND
-// ─────────────────────────────────────────────────────────────
 const mapFiliereFromBackend = (filiere: string): string => {
   const mapping: Record<string, string> = {
     'toutes': 'Toutes',
@@ -42,7 +40,7 @@ const mapFiliereFromBackend = (filiere: string): string => {
 };
 
 const mapPromotionFromBackend = (promotion: string): string => {
-  return promotion.toUpperCase(); // l1 → L1
+  return promotion.toUpperCase();
 };
 
 const mapTypeFromBackend = (type: string): string => {
@@ -65,21 +63,33 @@ const EFriResources = () => {
   const [promotion, setPromotion] = useState("Tous");
   const [semestre, setSemestre] = useState("Tous");
   const [typeFilter, setTypeFilter] = useState("Tous");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // ✅ Ce que l'user tape
+  const [searchQuery, setSearchQuery] = useState(""); // ✅ Ce qui est envoyé à l'API
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   const [allResources, setAllResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false); // ✅ Spinner recherche
   const [error, setError] = useState<string | null>(null);
   
   const isAdmin = user?.role === "admin";
 
-  // ─────────────────────────────────────────────────────────────
-  // CHARGER LES RESSOURCES DEPUIS L'API
-  // ─────────────────────────────────────────────────────────────
+  // ✅ HANDLER RECHERCHE (Enter)
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchInput.trim());
+  };
+
+  // CHARGER LES RESSOURCES
   useEffect(() => {
     const fetchResources = async () => {
-      setLoading(true);
+      // ✅ Spinner uniquement pour la recherche
+      if (searchQuery) {
+        setIsSearching(true);
+      } else {
+        setLoading(true);
+      }
+      
       setError(null);
       
       try {
@@ -88,10 +98,9 @@ const EFriResources = () => {
           promotion: promotion !== "Tous" ? promotion : undefined,
           semestre: semestre !== "Tous" ? semestre : undefined,
           type: typeFilter !== "Tous" ? typeFilter : undefined,
-          search: search || undefined,
+          search: searchQuery || undefined,
         });
         
-        // Transformer les données backend pour l'affichage
         const transformedData = data.map((r: any) => ({
           id: r.id,
           titre: r.titre,
@@ -102,7 +111,7 @@ const EFriResources = () => {
           type: mapTypeFromBackend(r.type_ressource),
           date: new Date(r.created_at).toLocaleDateString('fr-FR'),
           format: (r.fichier_url || r.fichier || '').split('.').pop()?.toUpperCase() || "PDF",
-          fileUrl: r.fichier_url || r.fichier || '', // Prend le lien Cloudinary si dispo
+          fileUrl: r.fichier_url || r.fichier || '',
           description: r.description || "",
           uploaded_by: r.uploaded_by,
         }));
@@ -118,17 +127,16 @@ const EFriResources = () => {
         });
       } finally {
         setLoading(false);
+        setIsSearching(false);
       }
     };
 
     if (user) {
       fetchResources();
     }
-  }, [user, filiere, promotion, semestre, typeFilter, search, toast]);
+  }, [user, filiere, promotion, semestre, typeFilter, searchQuery, toast]);
 
-  // ─────────────────────────────────────────────────────────────
   // TÉLÉCHARGEMENT
-  // ─────────────────────────────────────────────────────────────
   const trackDownload = () => {
     if (!user?.email) return;
     const key = `unilib_download_count_${user.email}`;
@@ -139,9 +147,8 @@ const EFriResources = () => {
   const handleDownload = (r: any) => {
     trackDownload();
     
-    // Télécharger le fichier depuis le backend
     const link = document.createElement("a");
-    link.href = r.fileUrl; // URL complète du fichier (ex: http://127.0.0.1:8000/media/resources/2024/01/file.pdf)
+    link.href = r.fileUrl;
     link.download = `${r.titre}.${r.format.toLowerCase()}`;
     link.target = "_blank";
     document.body.appendChild(link);
@@ -154,16 +161,12 @@ const EFriResources = () => {
     });
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // SUPPRESSION (Admin uniquement)
-  // ─────────────────────────────────────────────────────────────
+  // SUPPRESSION
   const handleDelete = async (id: string) => {
     if (!confirm("Voulez-vous vraiment supprimer cette ressource ?")) return;
     
     try {
       await deleteResource(id);
-      
-      // Retirer de la liste locale
       setAllResources(prev => prev.filter(r => r.id !== id));
       
       toast({
@@ -182,9 +185,6 @@ const EFriResources = () => {
 
   const selectClass = "px-3 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary transition-all";
 
-  // ─────────────────────────────────────────────────────────────
-  // ÉTATS DE CHARGEMENT
-  // ─────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -210,9 +210,6 @@ const EFriResources = () => {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // RENDU PRINCIPAL
-  // ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
       {/* Filters */}
@@ -230,15 +227,23 @@ const EFriResources = () => {
             {semestres.map(s => <option key={s}>{s}</option>)}
           </select>
           
-          <div className="relative flex-1 min-w-0 sm:col-span-2 lg:col-span-1">
+          {/* ✅ FORM RECHERCHE avec Enter */}
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-0 sm:col-span-2 lg:col-span-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Rechercher..."
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary shadow-inner"
+              type="text"
+              placeholder="Rechercher"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-9 pr-10 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary shadow-inner"
             />
-          </div>
+            {/* ✅ SPINNER pendant recherche */}
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
+          </form>
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -279,6 +284,11 @@ const EFriResources = () => {
       <div className="flex items-center justify-between">
         <p className="font-inter text-sm text-muted-foreground">
           <span className="font-bold text-foreground">{allResources.length}</span> document{allResources.length > 1 ? 's' : ''} trouvé{allResources.length > 1 ? 's' : ''}
+          {searchQuery && (
+            <span className="ml-2 text-xs">
+              pour "<span className="font-semibold">{searchQuery}</span>"
+            </span>
+          )}
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FolderArchive, Cpu, Zap, Link as LinkIcon, Download, Info, ArrowRight, Plus, X, Trash2 } from "lucide-react";
-import { getCoursPratiques, uploadCoursPratique } from "@/lib/api";
+import { getCoursPratiques, uploadCoursPratique, deleteCoursPratique } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -174,16 +174,30 @@ const EFriProjects = () => {
     }
   };
 
-  const handleDeleteCours = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = cours.filter((c: any) => c.id !== id);
-    setCours(updated);
-    localStorage.setItem("unilib_cours", JSON.stringify(updated));
+  const handleDeleteCours = async (id: string, e: React.MouseEvent) => {
+  e.stopPropagation();
+  
+  if (!confirm("Voulez-vous vraiment supprimer ce cours pratique ?")) return;
+  
+  try {
+    await deleteCoursPratique(id);
+    
+    // Retirer de la liste locale
+    setCours(prev => prev.filter((c: any) => c.id !== id));
+    
     toast({
       title: "Cours supprimé",
       description: "Le support de cours pratique a été retiré.",
     });
-  };
+  } catch (error: any) {
+    console.error('Delete error:', error);
+    toast({
+      title: "Erreur",
+      description: "Impossible de supprimer le cours.",
+      variant: "destructive"
+    });
+  }
+};
 
   const resetForm = () => {
     setNewCours({

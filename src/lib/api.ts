@@ -1,52 +1,18 @@
-// COURS PRATIQUES
-export const getCoursPratiques = async () => {
-  const token = localStorage.getItem('access_token');
-  const response = await fetch(`${API_URL}/cours-pratiques/`, {
-    headers: {
-      'Authorization': token ? `Bearer ${token}` : '',
-    },
-  });
-  return handleResponse(response);
-};
-
-export const uploadCoursPratique = async (formData: FormData) => {
-  const token = localStorage.getItem('access_token');
-  
-  console.log('📤 Upload cours pratique...');
-  
-  // Log les données envoyées
-  for (let [key, value] of formData.entries()) {
-    if (value instanceof File) {
-      console.log(`${key}: ${value.name} (${value.size} bytes)`);
-    } else {
-      console.log(`${key}: ${value}`);
-    }
-  }
-  
-  const response = await fetch(`${API_URL}/cours-pratiques/`, {
-    method: 'POST',
-    headers: {
-      'Authorization': token ? `Bearer ${token}` : '',
-      // NE PAS mettre Content-Type pour FormData
-    },
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Erreur serveur' }));
-    console.error('❌ Erreur upload:', error);
-    throw new Error(error.detail || 'Upload échoué');
-  }
-  
-  const data = await response.json();
-  console.log('✅ Upload réussi:', data);
-  return data;
-};
-
-
 import { AppConfig } from '../config/appConfig';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || AppConfig.API_BASE_URL || 'http://127.0.0.1:8000/api';
+
+export interface UserType {
+  id: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  username: string;
+  filiere: string;
+  promotion?: string;
+  semestre?: string;
+  role: string;
+}
 
 // HELPERS
 const getAuthHeaders = () => {
@@ -65,7 +31,10 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
+// ============================================
 // AUTHENTICATION
+// ============================================
+
 export const register = async (data: {
   username: string;
   email: string;
@@ -78,11 +47,10 @@ export const register = async (data: {
   role?: string;
   verification_code?: string;
 }) => {
-  // Ensure a username exists (backend expects `username` field)
-const payload = { 
+  const payload = { 
     ...data, 
     username: data.username || data.email.split('@')[0],
-    promotion: data.promotion || '',  // Valeur par défaut vide
+    promotion: data.promotion || '',
     semestre: data.semestre || ''
   };
 
@@ -98,13 +66,11 @@ export const login = async (email: string, password: string) => {
   const response = await fetch(`${API_URL}/auth/login/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    // SimpleJWT expects `username` + `password` by default. Use email as username.
     body: JSON.stringify({email, password }),
   });
   
   const data = await handleResponse(response);
   
-  // Stocker les tokens
   if (data.access) localStorage.setItem('access_token', data.access);
   if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
   
@@ -124,9 +90,43 @@ export const logout = () => {
   localStorage.removeItem('unilib_session');
 };
 
-// RESOURCES
+export const refreshToken = async () => {
+  const refresh = localStorage.getItem('refresh_token');
+  if (!refresh) throw new Error('No refresh token');
+  
+  const response = await fetch(`${API_URL}/auth/token/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  });
+  
+  const data = await handleResponse(response);
+  localStorage.setItem('access_token', data.access);
+  return data;
+};
 
-// Mapping frontend → backend pour les filtres
+// ============================================
+// DASHBOARD
+// ============================================
+
+export const getDashboardStats = async () => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/auth/dashboard-stats/`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) throw new Error('Failed to fetch stats');
+  return response.json();
+};
+
+// ============================================
+// RESOURCES
+// ============================================
+
 const mapFiliereToBackend = (filiere: string): string => {
   const mapping: Record<string, string> = {
     'Toutes': 'toutes',
@@ -178,7 +178,6 @@ export const getResources = async (filters?: {
     params.append('promotion', mapPromotionToBackend(filters.promotion));
   }
   if (filters?.semestre && filters.semestre !== "Tous") {
-    // Extraire juste le numéro (S1 → 1)
     params.append('semestre', filters.semestre.replace('S', ''));
   }
   if (filters?.type && filters.type !== "Tous") {
@@ -199,7 +198,6 @@ export const getResources = async (filters?: {
 export const uploadResource = async (formData: FormData) => {
   const token = localStorage.getItem('access_token');
   
-  // Convertir les valeurs du FormData pour matcher le backend
   const titre = formData.get('titre');
   const matiere = formData.get('matiere');
   const type = formData.get('type');
@@ -209,14 +207,13 @@ export const uploadResource = async (formData: FormData) => {
   const fichier = formData.get('fichier');
   const description = formData.get('description') || '';
   
-  // Créer un nouveau FormData avec les bons noms de champs
   const backendFormData = new FormData();
   backendFormData.append('titre', titre as string);
   backendFormData.append('matiere', matiere as string);
   backendFormData.append('type_ressource', mapTypeToBackend(type as string));
   backendFormData.append('filiere', mapFiliereToBackend(filiere as string));
   backendFormData.append('promotion', mapPromotionToBackend(promotion as string));
-  backendFormData.append('semestre', (semestre as string).replace('S', '')); // S1 → 1
+  backendFormData.append('semestre', (semestre as string).replace('S', ''));
   backendFormData.append('fichier', fichier as File);
   backendFormData.append('description', description as string);
   
@@ -224,7 +221,6 @@ export const uploadResource = async (formData: FormData) => {
     method: 'POST',
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',
-      // NE PAS mettre Content-Type pour FormData
     },
     body: backendFormData,
   });
@@ -245,32 +241,202 @@ export const deleteResource = async (id: string | number) => {
   return { success: true };
 };
 
-// REFRESH TOKEN
-export const refreshToken = async () => {
-  const refresh = localStorage.getItem('refresh_token');
-  if (!refresh) throw new Error('No refresh token');
+// ============================================
+// COURS PRATIQUES
+// ============================================
+
+export const getCoursPratiques = async () => {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(`${API_URL}/cours-pratiques/`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+  return handleResponse(response);
+};
+
+export const uploadCoursPratique = async (formData: FormData) => {
+  const token = localStorage.getItem('access_token');
   
-  const response = await fetch(`${API_URL}/auth/token/refresh/`, {
+  console.log('📤 Upload cours pratique...');
+  
+  for (let [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`${key}: ${value.name} (${value.size} bytes)`);
+    } else {
+      console.log(`${key}: ${value}`);
+    }
+  }
+  
+  const response = await fetch(`${API_URL}/cours-pratiques/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh }),
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    body: formData,
   });
   
-  const data = await handleResponse(response);
-  localStorage.setItem('access_token', data.access);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Erreur serveur' }));
+    console.error('❌ Erreur upload:', error);
+    throw new Error(error.detail || 'Upload échoué');
+  }
+  
+  const data = await response.json();
+  console.log('✅ Upload réussi:', data);
   return data;
 };
 
-export const getDashboardStats = async () => {
+export const deleteCoursPratique = async (id: string) => {
   const token = localStorage.getItem('access_token');
   
-  const response = await fetch(`${API_URL}/auth/dashboard-stats/`, {
+  const response = await fetch(`${API_URL}/cours-pratiques/${id}/`, {
+    method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+  
+  if (!response.ok && response.status !== 204) {
+    throw new Error('Échec de la suppression');
+  }
+  
+  return { success: true };
+};
+
+// ============================================
+// EMPLOI DU TEMPS
+// ============================================
+
+export const getEmploiDuTemps = async () => {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(`${API_URL}/emploi-temps/`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+  return handleResponse(response);
+};
+
+export const getEmploiDuTempsActif = async () => {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(`${API_URL}/emploi-temps/actif/`, {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
       'Content-Type': 'application/json',
     },
   });
   
-  if (!response.ok) throw new Error('Failed to fetch stats');
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error('Failed to fetch emploi du temps');
+  }
   return response.json();
+};
+
+export const uploadEmploiDuTemps = async (formData: FormData) => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/emploi-temps/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    body: formData,
+  });
+  
+  return handleResponse(response);
+};
+
+export const deleteEmploiDuTemps = async (id: string) => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/emploi-temps/${id}/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error('Échec de la suppression');
+  }
+  
+  return { success: true };
+};
+
+// ============================================
+// PROFILE
+// ============================================
+
+export const updateProfile = async (data: Partial<UserType>) => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/auth/profile/`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  
+  return handleResponse(response);
+};
+
+export const changePassword = async (oldPassword: string, newPassword: string) => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/auth/change-password/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      old_password: oldPassword,
+      new_password: newPassword,
+    }),
+  });
+  
+  return handleResponse(response);
+};
+
+export const deleteAccount = async () => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/auth/delete-account/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  
+  if (!response.ok && response.status !== 204) {
+    throw new Error('Échec de la suppression du compte');
+  }
+  
+  return { success: true };
+};
+
+// NOTIFICATIONS
+export const getNotifications = async () => {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(`${API_URL}/auth/notifications/`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response);
+};
+
+export const markNotificationRead = async (id: number) => {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(`${API_URL}/auth/notifications/${id}/read/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response);
 };

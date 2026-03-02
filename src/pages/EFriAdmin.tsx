@@ -157,7 +157,7 @@ const EFriAdmin = () => {
                   <span className="font-poppins font-bold text-sm text-muted-foreground w-5">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-inter text-sm text-foreground truncate">{r.titre}</p>
-                    <p className="font-inter text-xs text-muted-foreground">{r.matiere}</p>
+                    <p className="font-inter text-xs text-muted-foreground">{r.type}</p>
                   </div>
                   <span className="font-inter text-xs text-muted-foreground flex items-center gap-1">
                     <Download size={12} /> {r.telechargements}
