@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import UniLibLogo from "@/components/UniLibLogo";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { register } from "@/lib/api";
+import EFriLogo from "@/components/EFriLogo";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const filieres = ["Genie Logiciel", "Intelligence Artificielle", "Securite Informatique", "SEiot", "Internet Multimedia"];
 
@@ -40,73 +42,56 @@ const EFriSignup = () => {
     if (!form.password) errs.password = "Requis";
     else if (form.password.length < 8) errs.password = "Minimum 8 caractères";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "Les mots de passe ne correspondent pas";
-    if (form.role === "responsable" && !form.verificationCode) {
-    errs.verificationCode = "Un code de vérification est requis";
-  }
+    if (form.role === "responsable") {
+      if (!form.verificationCode) {
+        errs.verificationCode = "Un code de vérification est requis";
+      } else {
+        const storedCodes = JSON.parse(localStorage.getItem("unilib_resp_codes") || "[]");
+        const validCode = storedCodes.find((c) => c.code === form.verificationCode.toUpperCase() && !c.used);
+        if (!validCode) errs.verificationCode = "Code invalide ou déjà utilisé";
+      }
+    }
     if (!form.cgu) errs.cgu = "Vous devez accepter les CGU";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validate()) return;
-  
-  setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 1500));
 
-  try {
-    // Appel API pour inscription
-    console.log('📝 Tentative d\'inscription...', form.email);
-    
-    await register({
-      username: form.email.split('@')[0], // Générer username depuis email
+    // Simuler l'enregistrement (localStorage persistence)
+    const newUser = {
       email: form.email.toLowerCase(),
       password: form.password,
       nom: form.nom,
       prenom: form.prenom,
       filiere: form.filiere,
-      role: form.role, 
-      verification_code: form.role === 'responsable' ? form.verificationCode : undefined,
-    });
-    
-    console.log('✅ Inscription réussie');
-    
-    // Consommer le code responsable si nécessaire (garde le système local)
+      role: form.role,
+      status: "active" as const
+    };
+
+    const existingUsers = JSON.parse(localStorage.getItem("unilib_users") || "[]");
+    localStorage.setItem("unilib_users", JSON.stringify([...existingUsers, newUser]));
+
+    // Consume the code if it's a responsable
     if (form.role === "responsable") {
       const storedCodes = JSON.parse(localStorage.getItem("unilib_resp_codes") || "[]");
-      const updatedCodes = storedCodes.map((c: any) =>
+      const updatedCodes = storedCodes.map((c) =>
         c.code === form.verificationCode.toUpperCase() ? { ...c, used: true } : c
       );
       localStorage.setItem("unilib_resp_codes", JSON.stringify(updatedCodes));
     }
 
+    setLoading(false);
     toast({
       title: "Inscription réussie",
       description: "Votre compte a été créé. Vous pouvez maintenant vous connecter !"
     });
-    
     navigate("/e-fri/connexion");
-    
-  } catch (error: any) {
-    console.error('❌ Registration error:', error);
-
-    // Afficher l'erreur du backend
-    const errorMessage = error.message || "L'inscription a échoué.";
-    
-    // Si c'est une erreur de code, l'afficher dans le champ
-    if (errorMessage.includes('Code')) {
-      setErrors({ verificationCode: errorMessage });
-    }
-    
-    toast({
-      title: "Erreur d'inscription",
-      description: error.message || "L'inscription a échoué.",
-      variant: "destructive"
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const strength = getPasswordStrength(form.password);
   const isFormValid = form.nom && form.prenom && form.email && form.filiere && form.password && form.confirmPassword && form.cgu;
@@ -120,33 +105,32 @@ const handleSubmit = async (e: React.FormEvent) => {
     }`;
 
   return (
-    <div className="min-h-screen flex">
+    
+    <div className="min-h-screen flex bg-neutral-50">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[40%] bg-primary items-center justify-center p-12 relative">
-        <div className="absolute top-4 left-4">
-          <UniLibLogo size="small" />
-        </div>
+      <div className="hidden relative lg:flex lg:w-[45%] items-center justify-center p-12">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="16" cy="24" r="12" fill="white" opacity="0.3" />
-              <circle cx="24" cy="24" r="12" fill="white" opacity="0.25" />
-              <circle cx="20" cy="14" r="12" fill="white" opacity="0.35" />
-            </svg>
-            <span className="font-poppins text-2xl text-primary-foreground">
-              <span className="font-medium opacity-80">e-</span>
-              <span className="font-bold">FRI</span>
-            </span>
+          <div className="absolute top-4 left-4 p-8 flex flex-row items-center justify-center gap-6">
+            <UniLibLogo size="small" />
+            <div className="w-px bg-slate-300 h-10"></div>
+            <Link to="/e-fri">
+              <EFriLogo size="lg" />
+            </Link>
           </div>
-          <p className="font-inter text-sm text-primary-foreground opacity-80 max-w-xs">
-            "Rejoignez la communauté e-FRI et accédez à des milliers de ressources académiques."
-          </p>
+          <div className={`absolute w-[80%] min-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+            <img src="/star.svg" alt="star" className="w-40 absolute top-[35%] left-[-5%]" />
+            <img src="/star1.svg" alt="star" className="w-20 absolute top-[3em] right-[4em]" />
+            <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[-3em] right-[10em] animate-" />
+            <div className="flex flex-col items-center justify-center gap-3">
+              <img src="/enter-password.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-background overflow-y-auto">
-        <div className="w-full max-w-lg">
+      <div className="flex-1 flex items-center justify-center p-6 lg:m-8 rounded-2xl shadow-md lg:p-12 bg-white">
+        <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <UniLibLogo size="small" />
           </div>
@@ -171,13 +155,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <label className="font-inter text-sm text-foreground mb-1.5 block">Nom</label>
                 <div className="relative">
                   <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Votre nom" className={`${inputClass("nom")} pl-10`} />
+                  <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Votre nom" className={`pl-10`} />
                 </div>
                 {errors.nom && <p className="font-inter text-xs text-destructive mt-1">{errors.nom}</p>}
               </div>
               <div>
                 <label className="font-inter text-sm text-foreground mb-1.5 block">Prénom</label>
-                <input value={form.prenom} onChange={(e) => update("prenom", e.target.value)} placeholder="Votre prénom" className={inputClass("prenom")} />
+                <Input value={form.prenom} onChange={(e) => update("prenom", e.target.value)} placeholder="Votre prénom"  />
                 {errors.prenom && <p className="font-inter text-xs text-destructive mt-1">{errors.prenom}</p>}
               </div>
             </div>
@@ -186,7 +170,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <label className="font-inter text-sm text-foreground mb-1.5 block">Email</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="votre@email.com" className={`${inputClass("email")} pl-10`} />
+                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="votre@email.com" className={`pl-10`} />
               </div>
               {errors.email && <p className="font-inter text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
@@ -197,14 +181,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <button
                   type="button"
                   onClick={() => update("role", "etudiant")}
-                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "etudiant" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-background text-foreground border-border hover:bg-muted"}`}
+                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "etudiant" ? "bg-green-500 text-secondary-foreground border-green-500" : "bg-background text-foreground border-border hover:bg-muted"}`}
                 >
                   Étudiant
                 </button>
                 <button
                   type="button"
                   onClick={() => update("role", "responsable")}
-                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "responsable" ? "bg-secondary text-secondary-foreground border-secondary" : "bg-background text-foreground border-border hover:bg-muted"}`}
+                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "responsable" ? "bg-green-500 text-secondary-foreground border-green-500" : "bg-background text-foreground border-border hover:bg-muted"}`}
                 >
                   Responsable
                 </button>
@@ -214,11 +198,10 @@ const handleSubmit = async (e: React.FormEvent) => {
             {form.role === "responsable" && (
               <div className="animate-in slide-in-from-top-2 duration-300">
                 <label className="font-inter text-sm text-foreground mb-1.5 block">Code de vérification responsable</label>
-                <input
+                <Input
                   value={form.verificationCode}
                   onChange={(e) => update("verificationCode", e.target.value)}
                   placeholder="Ex: RESP2026"
-                  className={inputClass("verificationCode")}
                 />
                 <p className="font-inter text-[10px] text-muted-foreground mt-1">Contactez l'administration pour obtenir votre code.</p>
                 {errors.verificationCode && <p className="font-inter text-xs text-destructive mt-1">{errors.verificationCode}</p>}
@@ -240,12 +223,12 @@ const handleSubmit = async (e: React.FormEvent) => {
               <label className="font-inter text-sm text-foreground mb-1.5 block">Mot de passe</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}
                   placeholder="Minimum 8 caractères"
-                  className={`${inputClass("password")} pl-10 pr-12`}
+                  className={` pl-10 pr-12`}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -266,29 +249,30 @@ const handleSubmit = async (e: React.FormEvent) => {
               <label className="font-inter text-sm text-foreground mb-1.5 block">Confirmer le mot de passe</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type="password"
                   value={form.confirmPassword}
                   onChange={(e) => update("confirmPassword", e.target.value)}
                   placeholder="Retapez votre mot de passe"
-                  className={`${inputClass("confirmPassword")} pl-10`}
+                  className={`pl-10`}
                 />
               </div>
               {errors.confirmPassword && <p className="font-inter text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
             </div>
 
             <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.cgu} onChange={(e) => update("cgu", e.target.checked)} className="w-4 h-4 mt-0.5 rounded border-input accent-primary" />
+              <input type="checkbox" checked={form.cgu} onChange={(e) => update("cgu", e.target.checked)}  />
               <span className="font-inter text-sm text-foreground">
                 J'accepte les <a href="#" className="text-secondary hover:underline">conditions générales d'utilisation</a>
               </span>
             </label>
             {errors.cgu && <p className="font-inter text-xs text-destructive">{errors.cgu}</p>}
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={loading || !isFormValid}
-              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-inter text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg text-primary-foreground font-inter text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -298,7 +282,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               ) : (
                 "Créer mon compte"
               )}
-            </button>
+            </Button>
           </form>
 
           <p className="text-center font-inter text-sm text-muted-foreground mt-6">

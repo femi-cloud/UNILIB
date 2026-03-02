@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { login, getCurrentUser } from "@/lib/api";
 import { registeredUsers } from "@/data/mockData";
 import UniLibLogo from "@/components/UniLibLogo";
+import EFriLogo from "@/components/EFriLogo";
+import { Button } from "@/components/ui/button";
+import GoogleBtn from "@/components/ui/googleBtn";
+import { Input } from "@/components/ui/input";
 
 const EFriLogin = () => {
   const [email, setEmail] = useState("");
@@ -39,113 +42,73 @@ const EFriLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
     setLoading(true);
+    await new Promise((r) => setTimeout(r, 1500));
 
-    try {
-      // 1. Login API et récupération des tokens
-      console.log('🔐 Tentative de connexion...', email);
-      const loginData = await login(email.toLowerCase(), password);
-      console.log('✅ Login réussi, tokens stockés');
-      
-      // 2. Récupérer les infos utilisateur
-      console.log('👤 Récupération des infos utilisateur...');
-      const userData = await getCurrentUser();
-      console.log('✅ User data:', userData);
-      
-      // 3. Vérifier le statut
-      if (userData.status && userData.status !== "active") {
+    const storedUsers = JSON.parse(localStorage.getItem("unilib_users") || "[]");
+    const allUsers = [...registeredUsers, ...storedUsers];
+    const user = allUsers.find(u => u.email === email.toLowerCase() && u.password === password);
+
+    setLoading(false);
+
+    if (user) {
+      if (user.status && user.status !== "active") {
         toast({
           title: "Accès refusé",
-          description: userData.status === "banned" 
-            ? "Votre compte a été banni par l'administration." 
-            : "Votre compte est actuellement désactivé.",
+          description: user.status === "banned" ? "Votre compte a été banni par l'administration." : "Votre compte est actuellement désactivé.",
           variant: "destructive"
         });
-        setLoading(false);
         return;
       }
-
-      // 4. Stocker la session
-      localStorage.setItem("unilib_session", JSON.stringify(userData));
-      console.log('✅ Session stockée');
-      
-      toast({ 
-        title: "Connexion réussie", 
-        description: `Ravi de vous revoir, ${userData.prenom} !` 
-      });
-      
+      localStorage.setItem("unilib_session", JSON.stringify(user));
+      toast({ title: "Connexion réussie", description: `Ravi de vous revoir, ${user.prenom} !` });
       navigate("/e-fri/dashboard");
-      
-    } catch (error: any) {
-      console.error('❌ Login error:', error);
+    } else {
       toast({
         title: "Erreur de connexion",
-        description: error.message || "Email ou mot de passe incorrect.",
+        description: "Email ou mot de passe incorrect.",
         variant: "destructive"
       });
       setErrors({ email: "Identifiants invalides" });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
-  toast({
-    title: "Connexion Google",
-    description: "Simulation de l'authentification Google...",
-  });
-  
-  try {
-    // Utiliser un compte de test prédéfini
-    const testEmail = "test@ifri.edu";
-    const testPassword = "test123"; // Créez ce compte en base d'abord !
-    
-    const data = await login(testEmail, testPassword);
-    const userData = await getCurrentUser();
-    
-    localStorage.setItem("unilib_session", JSON.stringify(userData));
-    
-    toast({ 
-      title: "Connecté via Google", 
-      description: `Bienvenue, ${userData.prenom} !` 
-    });
-    
-    navigate("/e-fri/dashboard");
-  } catch (error) {
+  const handleGoogleLogin = () => {
     toast({
-      title: "Erreur",
-      description: "La connexion Google a échoué",
-      variant: "destructive"
+      title: "Connexion Google",
+      description: "Simulation de l'authentification Google en cours...",
     });
-  }
-};
+    setTimeout(() => {
+      const user = registeredUsers[0]; // Marcel
+      localStorage.setItem("unilib_session", JSON.stringify(user));
+      navigate("/e-fri/dashboard");
+      toast({ title: "Connecté via Google", description: `Bienvenue, ${user.prenom} !` });
+    }, 1000);
+  };
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-[40%] bg-secondary items-center justify-center p-12">
+    <div className="min-h-screen flex bg-neutral-50">
+      <div className="hidden relative lg:flex lg:w-[45%] items-center justify-center p-12">
         <div className="text-center">
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 p-8 flex flex-row items-center justify-center gap-6">
             <UniLibLogo size="small" />
+            <div className="w-px bg-slate-300 h-10"></div>
+            <Link to="/e-fri">
+              <EFriLogo size="lg" />
+            </Link>
           </div>
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="16" cy="24" r="12" fill="white" opacity="0.3" />
-              <circle cx="24" cy="24" r="12" fill="white" opacity="0.25" />
-              <circle cx="20" cy="14" r="12" fill="white" opacity="0.35" />
-            </svg>
-            <span className="font-poppins text-2xl text-secondary-foreground">
-              <span className="font-medium opacity-80">e-</span>
-              <span className="font-bold">FRI</span>
-            </span>
+          <div className={`absolute w-[80%] min-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+            <img src="/public/star.svg" alt="star" className="w-40 absolute top-[14em] left-[1em]"/>
+            <img src="/public/star1.svg" alt="star" className="w-20 absolute top-[3em] right-[4em]"/>
+            <img src="/public/star2.svg" alt="star" className="w-20 absolute bottom-[-3em] right-[10em] animate-"/>
+            <div className="flex flex-col items-center justify-center gap-3">
+              <img src="/public/access-account.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
+            </div>
           </div>
-          <p className="font-inter text-sm text-secondary-foreground opacity-80 max-w-xs">
-            "La connaissance est la clé de la réussite. Accédez à toutes vos ressources académiques en un clic."
-          </p>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-background">
+      <div className="flex-1 flex items-center justify-center p-6 lg:m-8 rounded-2xl shadow-md lg:p-12 bg-white">
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <UniLibLogo size="small" />
@@ -162,45 +125,39 @@ const EFriLogin = () => {
             </span>
           </Link>
 
-          <h2 className="font-poppins font-bold text-2xl text-foreground mb-1">Bienvenue sur e-FRI</h2>
+          <h2 className="font-poppins font-bold text-2xl text- mb-1">Bienvenue sur e-FRI</h2>
           <p className="font-inter text-sm text-muted-foreground mb-8">Connectez-vous pour accéder à vos ressources</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="font-inter text-sm text-foreground mb-1.5 block">Email</label>
+              <label className="font-inter text-sm text-foreground mb-3 block">Email</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre@email.com"
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg border font-inter text-sm text-foreground bg-background outline-none transition-colors ${
-                    errors.email ? "border-destructive border-2" : "border-input focus:border-secondary focus:border-2"
-                  }`}
+                  required
+
                 />
               </div>
               {errors.email && <p className="font-inter text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
 
             <div>
-              <label className="font-inter text-sm text-foreground mb-1.5 block">Mot de passe</label>
+              <label className="font-inter text-sm text-foreground mb-3 block">Mot de passe</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`w-full pl-10 pr-12 py-3 rounded-lg border font-inter text-sm text-foreground bg-background outline-none transition-colors ${
-                    errors.password ? "border-destructive border-2" : "border-input focus:border-secondary focus:border-2"
-                  }`}
+                  required
+
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
@@ -209,45 +166,22 @@ const EFriLogin = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={remember} 
-                  onChange={(e) => setRemember(e.target.checked)} 
-                  className="w-4 h-4 rounded border-input accent-primary" 
-                />
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="w-4 h-4 rounded border-input accent-blue-500" />
                 <span className="font-inter text-sm text-foreground">Se souvenir de moi</span>
               </label>
-              <Link to="/e-fri/mot-de-passe-oublie" className="font-inter text-sm text-secondary hover:underline">
-                Mot de passe oublié ?
-              </Link>
+              <Link to="/e-fri/mot-de-passe-oublie" className="font-inter text-sm text-secondary hover:underline">Mot de passe oublié ?</Link>
             </div>
 
-            <button
+            <Button
               type="submit"
+              className="w-full py-3 rounded-xl"
+              variant="primary"
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-inter text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Connexion...
-                </>
-              ) : "Se connecter"}
-            </button>
+              {loading ? "Connexion..." : "Se connecter"}
+            </Button>
 
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="w-full py-3 rounded-lg border border-border bg-background text-foreground font-inter text-sm font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2 mt-4"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
-              Continuer avec Google
-            </button>
+            <GoogleBtn onClick={() => handleGoogleLogin()} />
           </form>
 
           <div className="flex items-center gap-3 my-6">
@@ -262,7 +196,7 @@ const EFriLogin = () => {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

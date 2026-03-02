@@ -15,14 +15,11 @@ const HeroSection = () => {
     <section id="accueil" className="relative overflow-hidden bg-background pt-28 pb-16 lg:pt-36 lg:pb-24">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="flex flex-col lg:flex-row items-center gap-12">
-          {/* Grille de points bleus — haut gauche de la page */}
-          <div className="hidden lg:block absolute top-20 left-8 lg:left-12" style={{ zIndex: 5 }}>
-            <DotGrid color="hsl(var(--secondary))" />
-          </div>
+          
 
           {/* Left column - Text */}
           <div className="flex-1 lg:max-w-[55%] relative z-10 pt-12">
-            <h1 className="font-poppins font-bold text-4xl lg:text-5xl text-foreground leading-tight mb-4">
+            <h1 className="font-semibold text-4xl lg:text-5xl text-foreground leading-loose mb-4">
               Préparez vos examens avec les bonnes ressources.
               <ArrowRight className="inline-block ml-3 text-secondary" size={32} />
             </h1>
@@ -32,27 +29,15 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-              <a
-                href="#ecoles"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 font-inter text-sm font-medium text-accent-foreground hover:bg-accent-hover transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('ecoles')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
+              <Link to="/choix-entite" className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 font-inter text-sm font-medium text-accent-foreground hover:bg-accent-hover transition-colors">
                 Accéder aux épreuves
                 <ArrowUpRight size={16} />
-              </a>
-              <a
-                href="#ecoles"
-                className="inline-flex items-center gap-2 rounded-lg border border-accent px-6 py-3 font-inter text-sm font-medium text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('ecoles')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Créer mon compte
-              </a>
+              </Link>
+
+              <Link to="/choix-entite" className="inline-flex items-center gap-2 rounded-lg border border-accent px-6 py-3 font-inter text-sm font-medium text-accent hover:bg-accent hover:text-accent-foreground transition-colors">
+                Choisir mon entité
+              </Link>
+
             </div>
           </div>
 

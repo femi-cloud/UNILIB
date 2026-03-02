@@ -12,13 +12,13 @@ const Footer = () => {
             <img src={logoUac} alt="UAC" className="h-10 object-contain" />
           </div>
           <nav className="flex flex-col gap-2">
-            <a href="#accueil" className="font-inter text-sm text-foreground font-medium hover:text-secondary transition-colors">
+            <a href="/#accueil" className="font-inter text-sm text-foreground font-medium hover:text-secondary transition-colors">
               Accueil
             </a>
-            <a href="#fonctionnalites" className="font-inter text-sm text-muted-foreground hover:text-secondary transition-colors">
+            <a href="/#fonctionnalites" className="font-inter text-sm text-muted-foreground hover:text-secondary transition-colors">
               Fonctionnalités
             </a>
-            <a href="#ecoles" className="font-inter text-sm text-muted-foreground hover:text-secondary transition-colors">
+            <a href="/#ecoles" className="font-inter text-sm text-muted-foreground hover:text-secondary transition-colors">
               Ecoles connectées
             </a>
           </nav>

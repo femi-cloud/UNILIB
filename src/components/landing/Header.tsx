@@ -15,13 +15,13 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#accueil" className="font-inter text-sm font-medium text-foreground">
+          <a href="/#accueil" className="font-inter text-sm font-medium text-foreground">
             Accueil
           </a>
-          <a href="#fonctionnalites" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/#fonctionnalites" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">
             Fonctionnalités
           </a>
-          <a href="#ecoles" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/#ecoles" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">
             Ecoles connectées
           </a>
         </nav>
