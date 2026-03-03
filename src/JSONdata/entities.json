@@ -2,9 +2,9 @@
   {
     "id": 0,
     "entityName": "ifri",
-    "logo": "/src/assets/logoifri.png",
+    "logo": "@/assets/logoifri.png",
     "slogan": "Nous batissons l'excellence",
-    "image": "/src/assets/IfriBuilding.jpeg",
+    "image": "@/assets/IfriBuilding.jpeg",
     "appName": "e-Fri",
     "bgColor": "",
     "disabled": false
