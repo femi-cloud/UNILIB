@@ -133,20 +133,15 @@ const EFriSignup = () => {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-6 lg:m-8 rounded-2xl shadow-md lg:p-12 bg-white">
         <div className="w-full max-w-md">
-          <div className="flex items-center justify-between mb-4 lg:hidden">
-            <UniLibLogo size="small" />
+          <div className="w-full p-8 mb-10 flex flex-row items-center justify-center gap-6 lg:hidden">
+            <Link to="/">
+              <UniLibLogo size="small" />
+            </Link>
+            <div className="w-px bg-slate-300 h-10"></div>
+            <Link to="/e-fri">
+              <EFriLogo size="lg" />
+            </Link>
           </div>
-          <Link to="/e-fri" className="flex items-center gap-2 mb-4 lg:hidden hover:opacity-80 transition-opacity">
-            <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-              <circle cx="16" cy="24" r="12" fill="#3D5AFE" opacity="0.85" />
-              <circle cx="24" cy="24" r="12" fill="#FF9800" opacity="0.75" />
-              <circle cx="20" cy="14" r="12" fill="#69F0AE" opacity="0.8" />
-            </svg>
-            <span className="font-poppins text-lg">
-              <span className="font-medium text-muted-foreground">e-</span>
-              <span className="font-bold text-foreground">FRI</span>
-            </span>
-          </Link>
 
           <h2 className="font-poppins font-bold text-2xl text-foreground mb-1">Créer un compte e-FRI</h2>
           <p className="font-inter text-sm text-muted-foreground mb-8">Remplissez vos informations pour commencer</p>
