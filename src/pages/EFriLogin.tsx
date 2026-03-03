@@ -98,10 +98,10 @@ const EFriLogin = () => {
               <EFriLogo size="lg" />
             </Link>
           </div>
-          <div className={`absolute w-[80%] min-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
-            <img src="/star.svg" alt="star" className="w-40 absolute top-[35%] left-[-5%] animate-spin animate-duration-[8000ms]" />
+          <div className={`absolute w-[80%] max-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+            <img src="/star.svg" alt="star" className="w-40 absolute top-[35%] left-[5%] animate-spin animate-duration-[8000ms]" />
             <img src="/star1.svg" alt="star" className="w-20 absolute top-[3%] right-[4%] animate-rotate-bounce" />
-            <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[-3%] right-[10%] animate-spin animate-duration-[6000ms] animate-reverse" />
+            <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[3%] right-[10%] animate-spin animate-duration-[6000ms] animate-reverse" />
             <div className="flex flex-col items-center justify-center gap-3">
               <img src="/public/access-account.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
             </div>

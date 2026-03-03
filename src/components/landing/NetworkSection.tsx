@@ -60,9 +60,8 @@ const NetworkSection = () => {
         </p>
       </div>
 
-      <div className="container mx-auto px-6 lg:px-12 network-container-3d">
+      {/* <div className="container mx-auto px-6 lg:px-12 network-container-3d">
         <div className="relative w-full max-w-3xl mx-auto circuit-wrapper-3d" style={{ aspectRatio: "4/3" }}>
-          {/* SVG lines with Branch animations */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
             {schools.map((school) => (
               <line
@@ -79,7 +78,6 @@ const NetworkSection = () => {
             ))}
           </svg>
 
-          {/* Center UniLib node - Fixed 3D Position */}
           <div
             className="absolute flex items-center justify-center z-30"
             style={{
@@ -95,7 +93,6 @@ const NetworkSection = () => {
             </div>
           </div>
 
-          {/* School nodes - Stable 3D Space */}
           {schools.map((school) => (
             <div
               key={school.id}
@@ -133,7 +130,6 @@ const NetworkSection = () => {
                 </div>
               </div>
 
-              {/* Tooltip - Anchored to the stable container */}
               {hoveredNode === school.id && (
                 <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-lg font-inter text-[10px] font-semibold whitespace-nowrap z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
                   {school.available ? `Accéder à l'espace ${school.name}` : `${school.name} — Bientôt disponible`}
@@ -143,6 +139,94 @@ const NetworkSection = () => {
             </div>
           ))}
         </div>
+      </div> */}
+
+      <div className="w-full lg:w-[60vw] mx-auto max-w-[900px] grid grid-cols-10 grid-rows-10">
+
+
+        {/* vertical lines */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-4 row-end-6 col-start-1 col-end-5">
+          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-6 row-end-8 col-start-1 col-end-5">
+          <path d="M 0 3 L 6 3 C 7 3 7 2 7 2 L 7 1 C 7 0 8 0 8 0 L 10 0" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-4 row-end-6 col-start-7 col-end-11">
+          <path d="M 10 0 L 4 0 C 3 0 3 1 3 1 L 3 2 C 3 3 2 3 2 3 L 0 3" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-6 row-end-8 col-start-7 col-end-11">
+          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+
+        {/* horizontal lines */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1.5 3" className="row-start-2 row-end-5 col-start-5 col-end-6">
+          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1.5 3" className="row-start-7 row-end-10 col-start-6 col-end-7">
+          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke="#585858" stroke-width="0.05" fill="none" />
+        </svg>
+
+        {/* entity element */}
+        {/* unilib */}
+        <div
+          className="col-start-5 col-end-7 row-start-5 row-end-7 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-full before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "ifri" ? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("ifri")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-6 col-end-8 row-start-10 row-end-11 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/logoifri.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac"? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-1 col-end-2 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac"? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-1 col-end-2 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac"? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-10 col-end-11 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac"? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-10 col-end-11 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* unilib */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac"? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseLeave={() => setHoveredNode(null)}
+          // onClick={() => handleNodeClick(school)}
+          className="col-start-4 col-end-6 row-start-1 row-end-2 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+
+
       </div>
     </section>
   );

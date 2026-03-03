@@ -27,6 +27,9 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 58%;
 
+    --netLine: 0 0% 69%;
+    --netLineActive: 214 100% 66%;
+
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
