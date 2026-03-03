@@ -10,7 +10,7 @@ import imagePlc from "@/assets/image_placeholder.png";
 import logoPlc from "@/assets/logo_placeholder.png";
 
 
-function EntityCard({ entityId = null, image = "/src/assets/image_placeholder.png", logo = imagePlc, entityName = "Entity", slogan = "Bientot", disabled = false }) {
+function EntityCard({ entityId = null, image = imagePlc, logo = imagePlc, entityName = "Entity", slogan = "Bientot", disabled = false }) {
   const navigate = useNavigate();
   const img = (image.trim() != "") ? image : imagePlc;
   const lg = (logo.trim() != "") ? logo : logoPlc;
