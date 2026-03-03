@@ -92,11 +92,20 @@ export default {
             transform: 'rotate(5deg) translateY(0)'
           },
         },
+        'ping-bounce': {
+          '0%, 100%': {
+            transform: 'scale(1)'
+          },
+          '50%': {
+            transform: 'scale(1.08)'
+          },
+        },
       },
       animation: {
         'rotate-bounce': 'rotate-bounce 6s infinite',
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "ping-bounce": "ping-bounce 2s ease-in-out infinite",
       },
     },
   },

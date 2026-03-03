@@ -9,7 +9,7 @@ const stats = [
   { value: "500+", label: "ressources" },
   { value: "200+", label: "cours pratiques" },
   { value: "1000+", label: "étudiants actifs" },
-  { value: "50+", label: "enseignants" },
+  // { value: "50+", label: "enseignants" },
 ];
 
 const features = [
@@ -30,6 +30,7 @@ const DotGrid = ({ color }: { color: string }) => (
 );
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const EFriLanding = () => {
   useEffect(() => {
@@ -48,7 +49,7 @@ const EFriLanding = () => {
               <EFriLogo />
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8">
             <Link to="/e-fri" className="font-inter text-sm font-medium text-foreground">Accueil</Link>
             <Link to="/e-fri/ressources" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">Ressources</Link>
             <Link to="/e-fri/cours-pratiques" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">Cours Pratiques</Link>
@@ -56,11 +57,15 @@ const EFriLanding = () => {
             <Link to="/e-fri/ia" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">IA Assistant</Link>
           </nav>
           <div className="flex items-center gap-3">
-            <Link to="/e-fri/connexion" className="rounded-lg bg-secondary px-5 py-2 font-inter text-sm text-secondary-foreground hover:bg-secondary-hover transition-colors">
-              Se connecter
+            <Link to="/e-fri/connexion">
+              <Button variant="primary" className="py-3 rounded-xl bg-blue-600 shadow-blue-300/60 hover:shadow-blue-300/80">
+                Se connecter
+              </Button>
             </Link>
-            <Link to="/e-fri/inscription" className="rounded-lg bg-primary px-5 py-2 font-inter text-sm text-primary-foreground hover:bg-primary-hover transition-colors">
-              S'inscrire
+            <Link to="/e-fri/inscription">
+              <Button variant="primary" className="py-3 rounded-xl">
+                S'inscrire
+              </Button>
             </Link>
           </div>
         </div>
@@ -70,7 +75,7 @@ const EFriLanding = () => {
         {/* Hero */}
         <section className="relative overflow-hidden bg-background py-16 lg:py-24">
           <div className="container mx-auto px-6 lg:px-12">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
               {/* Grille de points bleus — haut gauche */}
               <img src="/dots_top.svg" className="absolute z-10 top-16 left-10 w-16 hidden lg:flex" />
               <img src="/dots_bottom.svg" className="absolute z-10 bottom-10 right-10 w-16 hidden lg:flex" />
@@ -85,17 +90,18 @@ const EFriLanding = () => {
                 </p>
                 <Link
                   to="/e-fri/connexion"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-inter text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-all hover:scale-105 duration-300 animate-in fade-in slide-in-from-left duration-700 delay-200"
                 >
-                  Accéder à la plateforme
-                  <ArrowUpRight size={16} />
+                  <Button className="rounded-xl">
+                    Accéder à la plateforme
+                    <ArrowUpRight size={16} />
+                  </Button>
                 </Link>
               </div>
 
               {/* Right column - Photo + Decorative shapes */}
-              <div className="flex-1 hidden relative h-[400px] lg:h-[630px] w-full max-w-[650px] lg:flex items-center justify-center">
-                <div className="relative w-[55vw] h-full flex flex-col items-center justify-center" >
-                  <div className=" absolute z-40 top-[20%] left-[20%] w-[15%] max-w-[200px] aspect-square rounded-[100%] bg-[#D5FFC9] animate-hero-float-orange"></div>
+              <div className="flex-1 hidden relative h-[400px] lg:h-[630px] w-full max-w-[650px] lg:flex items-center justify-center ">
+                <div className="relative w-[55vw] h-full flex flex-col items-end justify-center" >
+                  <div className=" absolute z-40 top-[20%] left-[40%] w-[15%] max-w-[200px] aspect-square rounded-[100%] bg-[#D5FFC9] animate-hero-float-orange"></div>
                   <div className="relative w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] overflow-x-clip">
                     <img
                       src="/src/assets/duvalier_1.png"

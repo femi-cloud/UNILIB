@@ -40,16 +40,23 @@ const NetworkSection = () => {
     }, {} as Record<string, number>);
   }, []);
 
-  const handleNodeClick = (school: SchoolNode) => {
-    if (school.available && school.route) {
-      navigate(school.route);
-    } else {
-      toast({
-        title: "Bientôt disponible",
-        description: `L'espace ${school.name} sera bientôt disponible sur UniLib.`,
-      });
-    }
+  // const handleNodeClick = (school: SchoolNode) => {
+  //   if (school.available && school.route) {
+  //     navigate(school.route);
+  //   } else {
+  //     toast({
+  //       title: "Bientôt disponible",
+  //       description: `L'espace ${school.name} sera bientôt disponible sur UniLib.`,
+  //     });
+  //   }
+  // };
+
+  const handleNodeClick = (link) => {
+    navigate(link);
   };
+
+  const strokeColor = "#cdcdcd"
+  const strokeColorActive = "#529dff"
 
   return (
     <section id="ecoles" className="bg-network py-16 lg:py-24 overflow-hidden">
@@ -141,90 +148,97 @@ const NetworkSection = () => {
         </div>
       </div> */}
 
-      <div className="w-full lg:w-[60vw] mx-auto max-w-[900px] grid grid-cols-10 grid-rows-10">
+      <div className="w-[80vw] lg:w-[60vw] mx-auto max-w-[900px] grid grid-cols-10 grid-rows-10">
 
 
-        {/* vertical lines */}
+        {/* horizontal lines */}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-4 row-end-6 col-start-1 col-end-5">
-          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke={hoveredNode === "ifri" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-6 row-end-8 col-start-1 col-end-5">
-          <path d="M 0 3 L 6 3 C 7 3 7 2 7 2 L 7 1 C 7 0 8 0 8 0 L 10 0" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 0 3 L 6 3 C 7 3 7 2 7 2 L 7 1 C 7 0 8 0 8 0 L 10 0" stroke={hoveredNode === "eneam" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
 
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-4 row-end-6 col-start-7 col-end-11">
-          <path d="M 10 0 L 4 0 C 3 0 3 1 3 1 L 3 2 C 3 3 2 3 2 3 L 0 3" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 10 0 L 4 0 C 3 0 3 1 3 1 L 3 2 C 3 3 2 3 2 3 L 0 3" stroke={hoveredNode === "epac" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 3" className="row-start-6 row-end-8 col-start-7 col-end-11">
-          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 0 0 L 4 0 C 5 0 5 1 5 1 L 5 2 C 5 3 6 3 6 3 L 10 3" stroke={hoveredNode === "fsa" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
 
-        {/* horizontal lines */}
+        {/* vertical lines */}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1.5 3" className="row-start-2 row-end-5 col-start-5 col-end-6">
-          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke={hoveredNode === "ine" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1.5 3" className="row-start-7 row-end-10 col-start-6 col-end-7">
-          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke="#585858" stroke-width="0.05" fill="none" />
+          <path d="M 1.5 3 L 1.5 1.5 C 1.5 1 1 1 1 1 L 0.5 1 C 0 1 0 0.6 0 0.6 L 0 0" stroke={hoveredNode === "imsp" ? strokeColorActive : strokeColor} stroke-width="0.05" fill="none" />
         </svg>
 
         {/* entity element */}
         {/* unilib */}
         <div
-          className="col-start-5 col-end-7 row-start-5 row-end-7 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-full before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
+          className="col-start-5 col-end-7 row-start-5 row-end-7 relative flex flex-col items-center justify-center before:content-[''] before:border-2 before:border-orange-200 before:bg-[url(/favicon2.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-full before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* imsp */}
+        <div
+          style={{
+            zIndex: hoveredNode === "imsp" ? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("imsp")}
+          onMouseLeave={() => setHoveredNode(null)}
+          onClick={() => handleNodeClick("/coming-soon")}
+          className="col-start-6 col-end-8 row-start-10 row-end-11 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-500 before:grayscale-[100%] before:bg-[url(/src/assets/imsp.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* ifri */}
         <div
           style={{
             zIndex: hoveredNode === "ifri" ? 100 : 20,
           }}
           onMouseEnter={() => setHoveredNode("ifri")}
           onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-6 col-end-8 row-start-10 row-end-11 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/imsp.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
+          onClick={() => handleNodeClick("/e-fri")}
+          className="col-start-1 col-end-2 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-200 before:bg-[url(/src/assets/logoifri.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+
+        {hoveredNode === "ifri" && (
+          <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-lg font-inter text-[10px] font-semibold whitespace-nowrap z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+            {`Accéder à l'espace e-FRI`}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-foreground" />
+          </div>
+        )}
+        {/* eneam */}
         <div
           style={{
-            zIndex: hoveredNode === "epac"? 100 : 20,
+            zIndex: hoveredNode === "eneam" ? 100 : 20,
+          }}
+          onMouseEnter={() => setHoveredNode("eneam")}
+          onMouseLeave={() => setHoveredNode(null)}
+          onClick={() => handleNodeClick("/coming-soon")}
+          className="col-start-1 col-end-2 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-700 before:grayscale-[100%] before:bg-[url(/src/assets/eneam.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* epac */}
+        <div
+          style={{
+            zIndex: hoveredNode === "epac" ? 100 : 20,
           }}
           onMouseEnter={() => setHoveredNode("epac")}
           onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-1 col-end-2 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/logoifri.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
+          onClick={() => handleNodeClick("/coming-soon")}
+          className="col-start-10 col-end-11 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-200 before:grayscale-[100%] before:bg-[url(/src/assets/epac.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* fsa */}
         <div
           style={{
-            zIndex: hoveredNode === "ena"? 100 : 20,
+            zIndex: hoveredNode === "fsa" ? 100 : 20,
           }}
-          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseEnter={() => setHoveredNode("fsa")}
           onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-1 col-end-2 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
+          onClick={() => handleNodeClick("/coming-soon")}
+          className="col-start-10 col-end-11 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-500 before:grayscale-[100%] before:bg-[url(/src/assets/logo_placeholder.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+        {/* ine */}
         <div
           style={{
-            zIndex: hoveredNode === "imsp"? 100 : 20,
+            zIndex: hoveredNode === "ine" ? 100 : 20,
           }}
-          onMouseEnter={() => setHoveredNode("epac")}
+          onMouseEnter={() => setHoveredNode("ine")}
           onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-10 col-end-11 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
-        <div
-          style={{
-            zIndex: hoveredNode === "epac"? 100 : 20,
-          }}
-          onMouseEnter={() => setHoveredNode("epac")}
-          onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-10 col-end-11 row-start-7 row-end-9 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
-        {/* unilib */}
-        <div
-          style={{
-            zIndex: hoveredNode === "epac"? 100 : 20,
-          }}
-          onMouseEnter={() => setHoveredNode("epac")}
-          onMouseLeave={() => setHoveredNode(null)}
-          // onClick={() => handleNodeClick(school)}
-          className="col-start-4 col-end-6 row-start-1 row-end-2 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+          onClick={() => handleNodeClick("/coming-soon")}
+          className="col-start-4 col-end-6 row-start-1 row-end-2 relative flex flex-col items-center justify-center before:content-[''] before:hover:border-4 before:hover:animate-stop before:animate-ping-bounce before:border-2 before:border-blue-300 before:animate-delay-400 before:grayscale-[100%] before:bg-[url(/src/assets/logo_placeholder.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:hover:grayscale-0 before:transition-all duration-700 before:w-[10vw] before:min-w-[50px] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
 
 
       </div>
