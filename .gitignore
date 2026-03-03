@@ -27,6 +27,8 @@ dist-ssr
 .env.production
 .env.local
 
+.env*
+
 unilib_backend\.env
 
 unilib_backend/media/
