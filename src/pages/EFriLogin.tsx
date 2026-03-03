@@ -94,18 +94,36 @@ const EFriLogin = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast({
-      title: "Connexion Google",
-      description: "Simulation de l'authentification Google en cours...",
+   const handleGoogleLogin = async () => {
+  toast({
+    title: "Connexion Google",
+    description: "Simulation de l'authentification Google...",
+  });
+  
+  try {
+    // Utiliser un compte de test prédéfini
+    const testEmail = "test@ifri.edu";
+    const testPassword = "test123"; 
+    
+    const data = await login(testEmail, testPassword);
+    const userData = await getCurrentUser();
+    
+    localStorage.setItem("unilib_session", JSON.stringify(userData));
+    
+    toast({ 
+      title: "Connecté via Google", 
+      description: `Bienvenue, ${userData.prenom} !` 
     });
-    setTimeout(() => {
-      const user = registeredUsers[0]; // Marcel
-      localStorage.setItem("unilib_session", JSON.stringify(user));
-      navigate("/e-fri/dashboard");
-      toast({ title: "Connecté via Google", description: `Bienvenue, ${user.prenom} !` });
-    }, 1000);
-  };
+    
+    navigate("/e-fri/dashboard");
+  } catch (error) {
+    toast({
+      title: "Erreur",
+      description: "La connexion Google a échoué",
+      variant: "destructive"
+    });
+  }
+};
 
   return (
     <div className="min-h-screen flex bg-neutral-50">
