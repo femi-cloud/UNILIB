@@ -124,7 +124,7 @@ const EFriLogin = () => {
             <img src="/star1.svg" alt="star" className="w-20 absolute top-[3%] right-[4%] animate-rotate-bounce" />
             <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[3%] right-[10%] animate-spin animate-duration-[6000ms] animate-reverse" />
             <div className="flex flex-col items-center justify-center gap-3">
-              <img src="/public/access-account.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
+              <img src="/access-account.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
             </div>
           </div>
         </div>
