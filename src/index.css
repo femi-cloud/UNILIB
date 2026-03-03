@@ -27,6 +27,9 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 58%;
 
+    --netLine: 0 0% 69%;
+    --netLineActive: 214 100% 66%;
+
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
@@ -36,7 +39,7 @@
 
     --radius: 0.5rem;
 
-    --stats-bg: 231 44% 48%;
+    --stats-bg: 231 100% 73%;  
     --network-bg: 0 0% 96%;
 
     --sidebar-background: 0 0% 100%;
@@ -49,6 +52,10 @@
     --sidebar-ring: 207 90% 54%;
 
     font-family: 'Inter', sans-serif;
+  }
+
+  .no-scrollbar::-webkit-scrollbar{
+    appearance: none;
   }
 
   .dark {

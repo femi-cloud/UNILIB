@@ -9,7 +9,7 @@ const stats = [
   { value: "500+", label: "ressources" },
   { value: "200+", label: "cours pratiques" },
   { value: "1000+", label: "étudiants actifs" },
-  { value: "50+", label: "enseignants" },
+  // { value: "50+", label: "enseignants" },
 ];
 
 const features = [
@@ -30,6 +30,7 @@ const DotGrid = ({ color }: { color: string }) => (
 );
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const EFriLanding = () => {
   useEffect(() => {
@@ -48,7 +49,7 @@ const EFriLanding = () => {
               <EFriLogo />
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8">
             <Link to="/e-fri" className="font-inter text-sm font-medium text-foreground">Accueil</Link>
             <Link to="/e-fri/ressources" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">Ressources</Link>
             <Link to="/e-fri/cours-pratiques" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">Cours Pratiques</Link>
@@ -56,11 +57,15 @@ const EFriLanding = () => {
             <Link to="/e-fri/ia" className="font-inter text-sm text-muted-foreground hover:text-foreground transition-colors">IA Assistant</Link>
           </nav>
           <div className="flex items-center gap-3">
-            <Link to="/e-fri/connexion" className="rounded-lg bg-secondary px-5 py-2 font-inter text-sm text-secondary-foreground hover:bg-secondary-hover transition-colors">
-              Se connecter
+            <Link to="/e-fri/connexion">
+              <Button variant="primary" className="py-3 rounded-xl bg-blue-600 shadow-blue-300/60 hover:shadow-blue-300/80">
+                Se connecter
+              </Button>
             </Link>
-            <Link to="/e-fri/inscription" className="rounded-lg bg-primary px-5 py-2 font-inter text-sm text-primary-foreground hover:bg-primary-hover transition-colors">
-              S'inscrire
+            <Link to="/e-fri/inscription">
+              <Button variant="primary" className="py-3 rounded-xl">
+                S'inscrire
+              </Button>
             </Link>
           </div>
         </div>
@@ -70,11 +75,10 @@ const EFriLanding = () => {
         {/* Hero */}
         <section className="relative overflow-hidden bg-background py-16 lg:py-24">
           <div className="container mx-auto px-6 lg:px-12">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
               {/* Grille de points bleus — haut gauche */}
-              <div className="hidden lg:block absolute top-20 left-8 lg:left-12 opacity-50" style={{ zIndex: 5 }}>
-                <DotGrid color="hsl(var(--secondary))" />
-              </div>
+              <img src="/dots_top.svg" className="absolute z-10 top-16 left-10 w-16 hidden lg:flex" />
+              <img src="/dots_bottom.svg" className="absolute z-10 bottom-10 right-10 w-16 hidden lg:flex" />
 
               {/* Left column - Text */}
               <div className="flex-1 lg:max-w-[55%] relative z-10 pt-12">
@@ -86,106 +90,32 @@ const EFriLanding = () => {
                 </p>
                 <Link
                   to="/e-fri/connexion"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-inter text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-all hover:scale-105 duration-300 animate-in fade-in slide-in-from-left duration-700 delay-200"
                 >
-                  Accéder à la plateforme
-                  <ArrowUpRight size={16} />
+                  <Button className="rounded-xl">
+                    Accéder à la plateforme
+                    <ArrowUpRight size={16} />
+                  </Button>
                 </Link>
               </div>
 
               {/* Right column - Photo + Decorative shapes */}
-              <div className="flex-1 relative h-[500px] lg:h-[550px] w-full max-w-[550px] flex items-center justify-center">
-                {/* 1. Blue Card (Main background) */}
-                <div
-                  className="hidden lg:block absolute rounded-[40px] shadow-lg animate-in fade-in zoom-in duration-1000"
-                  style={{
-                    backgroundColor: "hsl(var(--secondary))",
-                    width: "320px",
-                    height: "380px",
-                    top: "80px",
-                    right: "30px",
-                    transform: "rotate(10deg)",
-                    zIndex: 1,
-                  }}
-                />
-
-                {/* 2. Orange Circle (Overlap) */}
-                <div
-                  className="hidden lg:block absolute rounded-full shadow-md animate-hero-float-orange"
-                  style={{
-                    backgroundColor: "rgba(255, 152, 0, 0.25)",
-                    border: "2px solid hsl(var(--accent))",
-                    width: "200px",
-                    height: "200px",
-                    bottom: "20px",
-                    left: "10px",
-                    zIndex: 4,
-                  }}
-                />
-
-                {/* 3. Green Circle */}
-                <div
-                  className="hidden lg:block absolute rounded-full shadow-sm animate-hero-float-green"
-                  style={{
-                    backgroundColor: "hsl(var(--primary))",
-                    width: "70px",
-                    height: "70px",
-                    top: "120px",
-                    left: "50px",
-                    zIndex: 0,
-                  }}
-                />
-
-                {/* 4. Small Blue Circle */}
-                <div
-                  className="hidden lg:block absolute rounded-full shadow-sm animate-hero-float-blue"
-                  style={{
-                    backgroundColor: "hsl(var(--secondary))",
-                    width: "40px",
-                    height: "40px",
-                    bottom: "150px",
-                    right: "0px",
-                    zIndex: 0,
-                  }}
-                />
-
-                {/* 5. Decorative wavy lines */}
-                <div className="hidden lg:block absolute top-[100px] left-[30px] z-10 opacity-70">
-                  <svg width="60" height="30" viewBox="0 0 60 30" fill="none">
-                    <path d="M5 25C15 10 25 10 35 25C45 40 55 40 65 25" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* 6. Student Photo Container */}
-                <div
-                  className="hidden lg:block absolute"
-                  style={{
-                    width: "320px",
-                    height: "480px",
-                    top: "-20px",
-                    right: "40px",
-                    zIndex: 3,
-                    pointerEvents: "none",
-                  }}
-                >
-                  <img
-                    src={studentHero}
-                    alt="Étudiant IFRI"
-                    className="w-full h-full object-contain"
-                    style={{
-                      objectPosition: "center top",
-                      filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.15))",
-                      maskImage: "linear-gradient(to bottom, black 85%, transparent 90%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 90%)",
-                    }}
-                  />
-                </div>
-
-                {/* 7. Floating "Smiley" bubbles */}
-                <div className="hidden lg:block absolute top-[60px] right-[20px] z-10 bg-white/90 p-2 rounded-full shadow-lg border border-gray-100 animate-hero-float-blue">
-                  <div className="w-5 h-5 rounded-full border-2 border-[hsl(var(--secondary))] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--secondary))] mr-0.5" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--secondary))]" />
+              <div className="flex-1 hidden relative h-[400px] lg:h-[630px] w-full max-w-[650px] lg:flex items-center justify-center ">
+                <div className="relative w-[55vw] h-full flex flex-col items-end justify-center" >
+                  <div className=" absolute z-40 top-[20%] left-[40%] w-[15%] max-w-[200px] aspect-square rounded-[100%] bg-[#D5FFC9] animate-hero-float-orange"></div>
+                  <div className="relative w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] overflow-x-clip">
+                    <img
+                      src="/src/assets/duvalier_1.png"
+                      alt="Duvalier"
+                      className="absolute -rotate-[35deg] left-[13.24%] top-[-37.9%]" />
+                    <div className="absolute w-full -rotate-[35deg] h-1/2 bg-white -bottom-[25%]"></div>
+                    <div className="absolute bottom-[-30%] left-[20%] w-[55%] max-w-[300px] aspect-square rounded-[100%] border-2 border-[#FFA3A3]"></div>
+                  </div>
+                  <div className="absolute w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] bg-[#758AFF] border-0 overflow-clip">
+                    <img
+                      src="/src/assets/duvalier.png"
+                      alt="Duvalier"
+                      className="absolute -rotate-[35deg] left-[20%] top-[-40%]" />
+                    <div className="absolute bottom-[-30%] left-[20%] w-[55%] max-w-[300px] aspect-square rounded-[100%] bg-[#FFA3A3]"></div>
                   </div>
                 </div>
               </div>

@@ -1,0 +1,45 @@
+[
+  {
+    "id": 0,
+    "entityName": "ifri",
+    "logo": "/src/assets/logoifri.png",
+    "slogan": "Nous batissons l'excellence",
+    "image": "/src/assets/IfriBuilding.jpeg",
+    "appName": "e-Fri",
+    "bgColor": "",
+    "disabled": false
+  },
+  {
+    "id": 1,
+    "entityName": "eneam",
+    "logo": "/src/assets/eneam.png",
+    "slogan": "",
+    "image": "",
+    "appName": "e-Neam",
+    "bgColor": "",
+    "disabled": true
+
+  },
+  {
+    "id": 2,
+    "entityName": "imsp",
+    "logo": "/src/assets/imsp.png",
+    "slogan": "",
+    "image": "",
+    "appName": "e-Msp",
+    "bgColor": "#E5E8FF",
+    "disabled": true
+
+  },
+  {
+    "id": 3,
+    "entityName": "epac",
+    "logo": "/src/assets/epac.png",
+    "slogan": "",
+    "image": "",
+    "appName": "e-Pac",
+    "bgColor": "",
+    "disabled": true
+
+  }
+]

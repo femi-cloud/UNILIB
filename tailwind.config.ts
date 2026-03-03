@@ -21,6 +21,8 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        netLine: "hsl(var(--netLine))",
+        netLineActive: "hsl(var(--netLineActive))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -81,12 +83,35 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+
+        'rotate-bounce': {
+          '0%, 100%': {
+            transform: 'rotate(-5deg) translateY(-25%)'
+          },
+          '50%': {
+            transform: 'rotate(5deg) translateY(0)'
+          },
+        },
+        'ping-bounce': {
+          '0%, 100%': {
+            transform: 'scale(1)'
+          },
+          '50%': {
+            transform: 'scale(1.08)'
+          },
+        },
       },
       animation: {
+        'rotate-bounce': 'rotate-bounce 6s infinite',
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "ping-bounce": "ping-bounce 2s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("tailwindcss-animated")
+
+  ],
 } satisfies Config;

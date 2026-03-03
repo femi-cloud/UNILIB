@@ -7,7 +7,7 @@ import Footer from "@/components/landing/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col no-scrollbar">
       <Header />
       <main className="flex-1">
         <HeroSection />
