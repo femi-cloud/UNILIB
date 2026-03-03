@@ -8,7 +8,7 @@ import EFriLogo from "@/components/EFriLogo";
 import { Button } from "@/components/ui/button";
 import GoogleBtn from "@/components/ui/googleBtn";
 import { Input } from "@/components/ui/input";
-import {login, getCurrentUser } from '@/lib/api.ts';
+import { login, getCurrentUser } from '@/lib/api.ts';
 
 const EFriLogin = () => {
   const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ const EFriLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     setLoading(true);
 
     try {
@@ -51,18 +51,18 @@ const EFriLogin = () => {
       console.log('Tentative de connexion...', email);
       const loginData = await login(email.toLowerCase(), password);
       console.log('Login réussi, tokens stockés');
-      
+
       // 2. Récupérer les infos utilisateur
       console.log('👤 Récupération des infos utilisateur...');
       const userData = await getCurrentUser();
       console.log('User data:', userData);
-      
+
       // 3. Vérifier le statut
       if (userData.status && userData.status !== "active") {
         toast({
           title: "Accès refusé",
-          description: userData.status === "banned" 
-            ? "Votre compte a été banni par l'administration." 
+          description: userData.status === "banned"
+            ? "Votre compte a été banni par l'administration."
             : "Votre compte est actuellement désactivé.",
           variant: "destructive"
         });
@@ -73,15 +73,15 @@ const EFriLogin = () => {
       // 4. Stocker la session
       localStorage.setItem("unilib_session", JSON.stringify(userData));
       console.log('Session stockée');
-      
-      toast({ 
-        title: "Connexion réussie", 
-        description: `Ravi de vous revoir, ${userData.prenom} !` 
+
+      toast({
+        title: "Connexion réussie",
+        description: `Ravi de vous revoir, ${userData.prenom} !`
       });
-      
+
       navigate("/e-fri/dashboard");
-      
-    } catch (error: any) {
+
+    } catch (error) {
       console.error('Login error:', error);
       toast({
         title: "Erreur de connexion",
@@ -114,7 +114,8 @@ const EFriLogin = () => {
           <div className="absolute top-4 left-4 p-8 flex flex-row items-center justify-center gap-6">
             <Link to="/">
               <UniLibLogo size="small" />
-            </Link>            <div className="w-px bg-slate-300 h-10"></div>
+            </Link>
+            <div className="w-px bg-slate-300 h-10"></div>
             <Link to="/e-fri">
               <EFriLogo size="lg" />
             </Link>
@@ -124,7 +125,7 @@ const EFriLogin = () => {
             <img src="/star1.svg" alt="star" className="w-20 absolute top-[3%] right-[4%] animate-rotate-bounce" />
             <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[3%] right-[10%] animate-spin animate-duration-[6000ms] animate-reverse" />
             <div className="flex flex-col items-center justify-center gap-3">
-              <img src="/access-account.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
+              <img src="/access-account.svg" alt="account" className="w-[30vw] max-w-[500px]" />
             </div>
           </div>
         </div>
