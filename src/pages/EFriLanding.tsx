@@ -105,7 +105,7 @@ const EFriLanding = () => {
                   <div className=" absolute z-40 top-[20%] left-[40%] w-[15%] max-w-[200px] aspect-square rounded-[100%] bg-[#D5FFC9] animate-hero-float-orange"></div>
                   <div className="relative w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] overflow-x-clip">
                     <img
-                      src="/assets/duvalier.png"
+                      src={duv1}
                       alt="Duvalier"
                       className="absolute -rotate-[35deg] left-[13.24%] top-[-37.9%]" />
                     <div className="absolute w-full -rotate-[35deg] h-1/2 bg-white -bottom-[25%]"></div>
@@ -113,7 +113,7 @@ const EFriLanding = () => {
                   </div>
                   <div className="absolute w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] bg-[#758AFF] border-0 overflow-clip">
                     <img
-                      src="/assets/duvalier_1.png"
+                      src={duv}
                       alt="Duvalier"
                       className="absolute -rotate-[35deg] left-[20%] top-[-40%]" />
                     <div className="absolute bottom-[-30%] left-[20%] w-[55%] max-w-[300px] aspect-square rounded-[100%] bg-[#FFA3A3]"></div>
