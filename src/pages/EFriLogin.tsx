@@ -8,6 +8,7 @@ import EFriLogo from "@/components/EFriLogo";
 import { Button } from "@/components/ui/button";
 import GoogleBtn from "@/components/ui/googleBtn";
 import { Input } from "@/components/ui/input";
+import {login, getCurrentUser } from '@/lib/api.ts';
 
 const EFriLogin = () => {
   const [email, setEmail] = useState("");
@@ -42,34 +43,54 @@ const EFriLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
 
-    const storedUsers = JSON.parse(localStorage.getItem("unilib_users") || "[]");
-    const allUsers = [...registeredUsers, ...storedUsers];
-    const user = allUsers.find(u => u.email === email.toLowerCase() && u.password === password);
-
-    setLoading(false);
-
-    if (user) {
-      if (user.status && user.status !== "active") {
+    try {
+      // 1. Login API et récupération des tokens
+      console.log('Tentative de connexion...', email);
+      const loginData = await login(email.toLowerCase(), password);
+      console.log('Login réussi, tokens stockés');
+      
+      // 2. Récupérer les infos utilisateur
+      console.log('👤 Récupération des infos utilisateur...');
+      const userData = await getCurrentUser();
+      console.log('User data:', userData);
+      
+      // 3. Vérifier le statut
+      if (userData.status && userData.status !== "active") {
         toast({
           title: "Accès refusé",
-          description: user.status === "banned" ? "Votre compte a été banni par l'administration." : "Votre compte est actuellement désactivé.",
+          description: userData.status === "banned" 
+            ? "Votre compte a été banni par l'administration." 
+            : "Votre compte est actuellement désactivé.",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
-      localStorage.setItem("unilib_session", JSON.stringify(user));
-      toast({ title: "Connexion réussie", description: `Ravi de vous revoir, ${user.prenom} !` });
+
+      // 4. Stocker la session
+      localStorage.setItem("unilib_session", JSON.stringify(userData));
+      console.log('Session stockée');
+      
+      toast({ 
+        title: "Connexion réussie", 
+        description: `Ravi de vous revoir, ${userData.prenom} !` 
+      });
+      
       navigate("/e-fri/dashboard");
-    } else {
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Erreur de connexion",
-        description: "Email ou mot de passe incorrect.",
+        description: error.message || "Email ou mot de passe incorrect.",
         variant: "destructive"
       });
       setErrors({ email: "Identifiants invalides" });
+    } finally {
+      setLoading(false);
     }
   };
 

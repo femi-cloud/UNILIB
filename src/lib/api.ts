@@ -31,9 +31,7 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
-// ============================================
 // AUTHENTICATION
-// ============================================
 
 export const register = async (data: {
   username: string;
@@ -105,9 +103,7 @@ export const refreshToken = async () => {
   return data;
 };
 
-// ============================================
 // DASHBOARD
-// ============================================
 
 export const getDashboardStats = async () => {
   const token = localStorage.getItem('access_token');
@@ -123,9 +119,7 @@ export const getDashboardStats = async () => {
   return response.json();
 };
 
-// ============================================
 // RESOURCES
-// ============================================
 
 const mapFiliereToBackend = (filiere: string): string => {
   const mapping: Record<string, string> = {
@@ -241,9 +235,7 @@ export const deleteResource = async (id: string | number) => {
   return { success: true };
 };
 
-// ============================================
 // COURS PRATIQUES
-// ============================================
 
 export const getCoursPratiques = async () => {
   const token = localStorage.getItem('access_token');
@@ -304,9 +296,7 @@ export const deleteCoursPratique = async (id: string) => {
   return { success: true };
 };
 
-// ============================================
 // EMPLOI DU TEMPS
-// ============================================
 
 export const getEmploiDuTemps = async () => {
   const token = localStorage.getItem('access_token');
@@ -365,9 +355,7 @@ export const deleteEmploiDuTemps = async (id: string) => {
   return { success: true };
 };
 
-// ============================================
 // PROFILE
-// ============================================
 
 export const updateProfile = async (data: Partial<UserType>) => {
   const token = localStorage.getItem('access_token');
