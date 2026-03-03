@@ -72,9 +72,8 @@ const EFriLanding = () => {
           <div className="container mx-auto px-6 lg:px-12">
             <div className="flex flex-col lg:flex-row items-center gap-12">
               {/* Grille de points bleus — haut gauche */}
-              <div className="hidden lg:block absolute top-20 left-8 lg:left-12 opacity-50" style={{ zIndex: 5 }}>
-                <DotGrid color="hsl(var(--secondary))" />
-              </div>
+              <img src="/dots_top.svg" className="absolute z-10 top-16 left-10 w-16 hidden lg:flex" />
+              <img src="/dots_bottom.svg" className="absolute z-10 bottom-10 right-10 w-16 hidden lg:flex" />
 
               {/* Left column - Text */}
               <div className="flex-1 lg:max-w-[55%] relative z-10 pt-12">

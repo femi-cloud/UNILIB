@@ -179,7 +179,7 @@ const NetworkSection = () => {
           onMouseEnter={() => setHoveredNode("ifri")}
           onMouseLeave={() => setHoveredNode(null)}
           // onClick={() => handleNodeClick(school)}
-          className="col-start-6 col-end-8 row-start-10 row-end-11 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/logoifri.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+          className="col-start-6 col-end-8 row-start-10 row-end-11 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/imsp.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
         {/* unilib */}
         <div
           style={{
@@ -188,11 +188,11 @@ const NetworkSection = () => {
           onMouseEnter={() => setHoveredNode("epac")}
           onMouseLeave={() => setHoveredNode(null)}
           // onClick={() => handleNodeClick(school)}
-          className="col-start-1 col-end-2 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/favicon.svg)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
+          className="col-start-1 col-end-2 row-start-3 row-end-5 relative flex flex-col items-center justify-center before:content-[''] before:bg-[url(/src/assets/logoifri.png)] before:bg-center before:bg-[length:60%] before:bg-no-repeat before:hover:scale-[1.05] before:transition-all duration-700 before:w-[8vw] before:max-w-[120px] before:aspect-square before:rounded-full before:bg-white before:shadow-md before:block before:absolute"></div>
         {/* unilib */}
         <div
           style={{
-            zIndex: hoveredNode === "epac"? 100 : 20,
+            zIndex: hoveredNode === "ena"? 100 : 20,
           }}
           onMouseEnter={() => setHoveredNode("epac")}
           onMouseLeave={() => setHoveredNode(null)}
@@ -201,7 +201,7 @@ const NetworkSection = () => {
         {/* unilib */}
         <div
           style={{
-            zIndex: hoveredNode === "epac"? 100 : 20,
+            zIndex: hoveredNode === "imsp"? 100 : 20,
           }}
           onMouseEnter={() => setHoveredNode("epac")}
           onMouseLeave={() => setHoveredNode(null)}

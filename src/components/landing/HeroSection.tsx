@@ -14,9 +14,9 @@ const DotGrid = ({ color }: { color: string }) => (
 const HeroSection = () => {
   return (
     <section id="accueil" className="relative overflow-hidden bg-background pt-28 pb-16 lg:pt-36 lg:pb-24">
-      <div className="container mx-auto px-10 lg:p-8">
-        <img src="/dots_top.svg" className="absolute z-10 top-42 left-10 w-16" />
-        <img src="/dots_bottom.svg" className="absolute z-10 bottom-10 right-10 w-16" />
+      <div className="w-full lg:w-[85%] mx-auto p-10 lg:p-8">
+        <img src="/dots_top.svg" className="absolute z-10 top-32 left-10 w-16 hidden lg:flex" />
+        <img src="/dots_bottom.svg" className="absolute z-10 bottom-10 right-10 w-16 hidden lg:flex" />
         <div className="flex flex-col lg:flex-row items-center gap-12">
 
 
@@ -51,20 +51,16 @@ const HeroSection = () => {
 
           {/* Right column - Photo + Decorative shapes */}
           <div className="flex-1 hidden relative h-[400px] lg:h-[630px] w-full max-w-[650px] lg:flex items-center justify-center">
-            <svg width="553.896" height="364.028" className="w-[60%]" viewBox="0 0 553.896 364.028" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M29.2528 158.207C-8.99741 209.207 -10.4973 269.957 29.2529 316.207C69.0031 362.457 120.753 373.707 182.253 356.207C243.754 338.707 208.503 254.707 262.253 246.207C316.003 237.707 434.255 333.707 487.256 300.207C540.256 266.707 574.253 155.207 540.253 99.2073C506.252 43.2073 410.503 -11.7926 334.253 2.20737C258.002 16.2073 241.754 111.957 182.254 130.207C122.753 148.457 67.5031 107.207 29.2528 158.207Z" fill="#849DE0" fill-rule="evenodd" />
-            </svg>
-            <img
-              src="/src/assets/stdGroup.png"
-              alt="Duvalier"
-              className="absolute w-[90%] left-1/2 translate-x-[-50%] top-1/2 translate-y-[-50%]"
-              style={{
-                objectPosition: "center top",
-                maskImage: "linear-gradient(to bottom, black 85%, transparent 90%)",
-                WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 90%)",
-              }}
-            />
-
+            <div className="relative w-[55vw] h-full flex flex-col items-center justify-center" >
+              <div className=" absolute z-40 top-[20%] left-[20%] w-[15%] max-w-[200px] aspect-square rounded-[100%] bg-[#D5FFC9] animate-hero-float-orange"></div>
+              <div className="relative w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] overflow-x-clip">
+                <div className="absolute w-full -rotate-[35deg] h-1/2 bg-white -bottom-[25%]"></div>
+                <div className="absolute bottom-[-30%] left-[20%] w-[55%] max-w-[300px] aspect-square rounded-[100%] border-2 border-[#FFA3A3]"></div>
+              </div>
+              <div className="absolute w-[50%] max-w-[520px] aspect-square rounded-[20%] rotate-[35deg] bg-[#758AFF] border-0 overflow-clip">
+                <div className="absolute bottom-[-30%] left-[20%] w-[55%] max-w-[300px] aspect-square rounded-[100%] bg-[#FFA3A3]"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
