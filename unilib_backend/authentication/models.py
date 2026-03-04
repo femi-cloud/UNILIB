@@ -8,7 +8,7 @@ class User(AbstractUser):
     promotion = models.CharField(max_length=20, blank=True, null=True)
     semestre = models.CharField(max_length=20, blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    role = models.CharField(max_length=20, choices=[('etudiant', 'Etudiant'), ('admin', 'Admin')], default='etudiant')
+    role = models.CharField(max_length=20, choices=[('etudiant', 'Etudiant'),('responsable', 'Responsable'), ('admin', 'Admin')], default='etudiant')
 
     def __str__(self):
         return f"{self.prenom} {self.nom} ({self.email})"

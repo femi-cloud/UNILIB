@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UniLibLogo from "@/components/UniLibLogo";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EFriLogo from "@/components/EFriLogo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { register } from "@/lib/api";
 
 const filieres = ["Genie Logiciel", "Intelligence Artificielle", "Securite Informatique", "SEiot", "Internet Multimedia"];
 
@@ -22,8 +23,15 @@ const getPasswordStrength = (pw: string) => {
 
 const EFriSignup = () => {
   const [form, setForm] = useState({
-    nom: "", prenom: "", email: "", filiere: "",
-    password: "", confirmPassword: "", cgu: false, role: "etudiant" as "etudiant" | "responsable", verificationCode: ""
+    nom: "", 
+    prenom: "", 
+    email: "", 
+    filiere: "",
+    password: "", 
+    confirmPassword: "", 
+    cgu: false, 
+    role: "etudiant" as "etudiant" | "responsable", 
+    verificationCode: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,15 +50,12 @@ const EFriSignup = () => {
     if (!form.password) errs.password = "Requis";
     else if (form.password.length < 8) errs.password = "Minimum 8 caractères";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "Les mots de passe ne correspondent pas";
-    if (form.role === "responsable") {
-      if (!form.verificationCode) {
-        errs.verificationCode = "Un code de vérification est requis";
-      } else {
-        const storedCodes = JSON.parse(localStorage.getItem("unilib_resp_codes") || "[]");
-        const validCode = storedCodes.find((c) => c.code === form.verificationCode.toUpperCase() && !c.used);
-        if (!validCode) errs.verificationCode = "Code invalide ou déjà utilisé";
-      }
+    
+    // Validation code responsable
+    if (form.role === "responsable" && !form.verificationCode) {
+      errs.verificationCode = "Un code de vérification est requis";
     }
+    
     if (!form.cgu) errs.cgu = "Vous devez accepter les CGU";
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -59,53 +64,68 @@ const EFriSignup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
 
-    // Simuler l'enregistrement (localStorage persistence)
-    const newUser = {
-      email: form.email.toLowerCase(),
-      password: form.password,
-      nom: form.nom,
-      prenom: form.prenom,
-      filiere: form.filiere,
-      role: form.role,
-      status: "active" as const
-    };
+    try {
+      console.log('📝 Tentative d\'inscription...', form.email);
+      
+      // ✅ APPEL API DJANGO
+      const response = await register({
+        username: form.email.split('@')[0], // Générer username depuis email
+        email: form.email.toLowerCase(),
+        password: form.password,
+        nom: form.nom,
+        prenom: form.prenom,
+        filiere: form.filiere,
+        role: form.role,
+        verification_code: form.verificationCode || undefined,
+      });
 
-    const existingUsers = JSON.parse(localStorage.getItem("unilib_users") || "[]");
-    localStorage.setItem("unilib_users", JSON.stringify([...existingUsers, newUser]));
+      console.log('✅ Inscription réussie:', response);
 
-    // Consume the code if it's a responsable
-    if (form.role === "responsable") {
-      const storedCodes = JSON.parse(localStorage.getItem("unilib_resp_codes") || "[]");
-      const updatedCodes = storedCodes.map((c) =>
-        c.code === form.verificationCode.toUpperCase() ? { ...c, used: true } : c
-      );
-      localStorage.setItem("unilib_resp_codes", JSON.stringify(updatedCodes));
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé. Vous pouvez maintenant vous connecter !",
+      });
+
+      // Redirection vers login
+      navigate("/e-fri/connexion");
+
+    } catch (error: any) {
+      console.error('❌ Erreur inscription:', error);
+      
+      // Gérer les erreurs spécifiques
+      if (error.message.includes('verification_code')) {
+        setErrors({ verificationCode: "Code invalide ou déjà utilisé" });
+        toast({
+          title: "Code invalide",
+          description: "Le code de vérification est incorrect ou a déjà été utilisé.",
+          variant: "destructive",
+        });
+      } else if (error.message.includes('email')) {
+        setErrors({ email: "Cet email est déjà utilisé" });
+        toast({
+          title: "Email déjà utilisé",
+          description: "Un compte existe déjà avec cet email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur d'inscription",
+          description: error.message || "Impossible de créer le compte. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-    toast({
-      title: "Inscription réussie",
-      description: "Votre compte a été créé. Vous pouvez maintenant vous connecter !"
-    });
-    navigate("/e-fri/connexion");
   };
 
   const strength = getPasswordStrength(form.password);
   const isFormValid = form.nom && form.prenom && form.email && form.filiere && form.password && form.confirmPassword && form.cgu;
 
-  const inputClass = (field: string) =>
-    `w-full px-4 py-3 rounded-lg border font-inter text-sm text-foreground bg-background outline-none transition-colors ${errors[field] ? "border-destructive border-2" : "border-input focus:border-secondary focus:border-2"
-    }`;
-
-  const selectClass = (field: string) =>
-    `w-full px-4 py-3 rounded-lg border font-inter text-sm text-foreground bg-background outline-none transition-colors appearance-none ${errors[field] ? "border-destructive border-2" : "border-input focus:border-secondary focus:border-2"
-    }`;
-
   return (
-
     <div className="min-h-screen flex bg-neutral-50">
       {/* Left panel */}
       <div className="hidden relative lg:flex lg:w-[45%] items-center justify-center p-12">
@@ -119,12 +139,12 @@ const EFriSignup = () => {
               <EFriLogo size="lg" />
             </Link>
           </div>
-          <div className={`absolute w-[80%] max-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+          <div className="absolute w-[80%] max-w-[700px] aspect-square flex flex-col items-center justify-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <img src="/star.svg" alt="star" className="w-40 absolute top-[35%] left-[5%] animate-rotate-bounce" />
             <img src="/star1.svg" alt="star" className="w-20 absolute top-[3%] right-[4%] animate-spin animate-duration-[6000ms] animate-reverse" />
             <img src="/star2.svg" alt="star" className="w-20 absolute bottom-[3%] right-[10%] animate-spin animate-duration-[8000ms]" />
             <div className="flex flex-col items-center justify-center gap-3">
-              <img src="/enter-password.svg" alt="nigga-account" className="w-[30vw] max-w-[500px]" />
+              <img src="/enter-password.svg" alt="signup" className="w-[30vw] max-w-[500px]" />
             </div>
           </div>
         </div>
@@ -152,13 +172,24 @@ const EFriSignup = () => {
                 <label className="font-inter text-sm text-foreground mb-1.5 block">Nom</label>
                 <div className="relative">
                   <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={form.nom} onChange={(e) => update("nom", e.target.value)} placeholder="Votre nom" className={`pl-10`} />
+                  <Input 
+                    value={form.nom} 
+                    onChange={(e) => update("nom", e.target.value)} 
+                    placeholder="Votre nom" 
+                    className="pl-10"
+                    disabled={loading}
+                  />
                 </div>
                 {errors.nom && <p className="font-inter text-xs text-destructive mt-1">{errors.nom}</p>}
               </div>
               <div>
                 <label className="font-inter text-sm text-foreground mb-1.5 block">Prénom</label>
-                <Input value={form.prenom} onChange={(e) => update("prenom", e.target.value)} placeholder="Votre prénom" />
+                <Input 
+                  value={form.prenom} 
+                  onChange={(e) => update("prenom", e.target.value)} 
+                  placeholder="Votre prénom"
+                  disabled={loading}
+                />
                 {errors.prenom && <p className="font-inter text-xs text-destructive mt-1">{errors.prenom}</p>}
               </div>
             </div>
@@ -167,7 +198,14 @@ const EFriSignup = () => {
               <label className="font-inter text-sm text-foreground mb-1.5 block">Email</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="votre@email.com" className={`pl-10`} />
+                <Input 
+                  type="email" 
+                  value={form.email} 
+                  onChange={(e) => update("email", e.target.value)} 
+                  placeholder="votre@email.com" 
+                  className="pl-10"
+                  disabled={loading}
+                />
               </div>
               {errors.email && <p className="font-inter text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
@@ -178,14 +216,24 @@ const EFriSignup = () => {
                 <button
                   type="button"
                   onClick={() => update("role", "etudiant")}
-                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "etudiant" ? "bg-green-500 text-secondary-foreground border-green-500" : "bg-background text-foreground border-border hover:bg-muted"}`}
+                  disabled={loading}
+                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${
+                    form.role === "etudiant" 
+                      ? "bg-green-500 text-secondary-foreground border-green-500" 
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  } disabled:opacity-50`}
                 >
                   Étudiant
                 </button>
                 <button
                   type="button"
                   onClick={() => update("role", "responsable")}
-                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${form.role === "responsable" ? "bg-green-500 text-secondary-foreground border-green-500" : "bg-background text-foreground border-border hover:bg-muted"}`}
+                  disabled={loading}
+                  className={`py-2.5 rounded-lg font-inter text-sm transition-all border ${
+                    form.role === "responsable" 
+                      ? "bg-green-500 text-secondary-foreground border-green-500" 
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  } disabled:opacity-50`}
                 >
                   Responsable
                 </button>
@@ -199,21 +247,27 @@ const EFriSignup = () => {
                   value={form.verificationCode}
                   onChange={(e) => update("verificationCode", e.target.value)}
                   placeholder="Ex: RESP2026"
+                  disabled={loading}
                 />
-                <p className="font-inter text-[10px] text-muted-foreground mt-1">Contactez l'administration pour obtenir votre code.</p>
+                <p className="font-inter text-[10px] text-muted-foreground mt-1">
+                  Contactez l'administration pour obtenir votre code.
+                </p>
                 {errors.verificationCode && <p className="font-inter text-xs text-destructive mt-1">{errors.verificationCode}</p>}
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="font-inter text-sm text-foreground mb-1.5 block">Filière</label>
-                <select value={form.filiere} onChange={(e) => update("filiere", e.target.value)} className={selectClass("filiere")}>
-                  <option value="">Choisir</option>
-                  {filieres.map((f) => <option key={f} value={f}>{f}</option>)}
-                </select>
-                {errors.filiere && <p className="font-inter text-xs text-destructive mt-1">{errors.filiere}</p>}
-              </div>
+            <div>
+              <label className="font-inter text-sm text-foreground mb-1.5 block">Filière</label>
+              <select 
+                value={form.filiere} 
+                onChange={(e) => update("filiere", e.target.value)}
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-lg border font-inter text-sm text-foreground bg-background outline-none transition-colors"
+              >
+                <option value="">Choisir</option>
+                {filieres.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+              {errors.filiere && <p className="font-inter text-xs text-destructive mt-1">{errors.filiere}</p>}
             </div>
 
             <div>
@@ -225,18 +279,29 @@ const EFriSignup = () => {
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}
                   placeholder="Minimum 8 caractères"
-                  className={` pl-10 pr-12`}
+                  className="pl-10 pr-12"
+                  disabled={loading}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={loading}
+                >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {form.password && (
                 <div className="mt-2">
                   <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: strength.width, backgroundColor: strength.color }} />
+                    <div 
+                      className="h-full rounded-full transition-all" 
+                      style={{ width: strength.width, backgroundColor: strength.color }} 
+                    />
                   </div>
-                  <p className="font-inter text-xs mt-1" style={{ color: strength.color }}>{strength.label}</p>
+                  <p className="font-inter text-xs mt-1" style={{ color: strength.color }}>
+                    {strength.label}
+                  </p>
                 </div>
               )}
               {errors.password && <p className="font-inter text-xs text-destructive mt-1">{errors.password}</p>}
@@ -251,14 +316,20 @@ const EFriSignup = () => {
                   value={form.confirmPassword}
                   onChange={(e) => update("confirmPassword", e.target.value)}
                   placeholder="Retapez votre mot de passe"
-                  className={`pl-10`}
+                  className="pl-10"
+                  disabled={loading}
                 />
               </div>
               {errors.confirmPassword && <p className="font-inter text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
             </div>
 
             <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.cgu} onChange={(e) => update("cgu", e.target.checked)} />
+              <input 
+                type="checkbox" 
+                checked={form.cgu} 
+                onChange={(e) => update("cgu", e.target.checked)}
+                disabled={loading}
+              />
               <span className="font-inter text-sm text-foreground">
                 J'accepte les <a href="#" className="text-secondary hover:underline">conditions générales d'utilisation</a>
               </span>
@@ -273,7 +344,7 @@ const EFriSignup = () => {
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Création...
                 </>
               ) : (
