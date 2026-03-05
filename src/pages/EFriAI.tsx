@@ -204,105 +204,117 @@ const EFriAI = () => {
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() && !selectedFile) return;
+  if (!text.trim() && !selectedFile) return;
 
-    if (!currentConversationId) {
-      const newConv: Conversation = {
-        id: generateId(),
-        title: generateTitle(text),
-        messages: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      setConversations(prev => [newConv, ...prev]);
-      setCurrentConversationId(newConv.id);
-    }
-
-    const userMsg: Message = {
-      role: "user",
-      content: text || "(Fichier joint)",
-      file: selectedFile ? {
-        name: selectedFile.name,
-        type: selectedFile.type,
-        preview: filePreview || undefined,
-      } : undefined,
+  if (!currentConversationId) {
+    const newConv: Conversation = {
+      id: generateId(),
+      title: generateTitle(text),
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
+    setConversations(prev => [newConv, ...prev]);
+    setCurrentConversationId(newConv.id);
+  }
 
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
+  const userMsg: Message = {
+    role: "user",
+    content: text || "(Fichier joint)",
+    file: selectedFile ? {
+      name: selectedFile.name,
+      type: selectedFile.type,
+      preview: filePreview || undefined,
+    } : undefined,
+  };
 
-    const currentFile = selectedFile;
-    removeFile();
+  setMessages(prev => [...prev, userMsg]);
+  setInput("");
+  setLoading(true);
 
-    try {
-      let aiText: string;
-      let contextUsed = false;
+  const currentFile = selectedFile;
+  removeFile();
 
-      if (currentFile && genAI) {
-        console.log('📎 Fichier détecté, utilisation du client Gemini');
-        
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-        
-        const filePart = await fileToGenerativePart(currentFile);
-        const prompt = `Tu es un assistant pédagogique pour l'IFRI au Bénin.
+  try {
+    let aiText: string;
+    let contextUsed = false;
+
+    if (currentFile && genAI) {
+      console.log('📎 Fichier détecté, utilisation du client Gemini');
+      
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+      
+      const filePart = await fileToGenerativePart(currentFile);
+      const prompt = `Tu es l'assistant pédagogique de Unilib, une plateforme de collection de ressources de l'IFRI au Bénin.
 Analyse ce fichier et réponds à la question de l'étudiant.
 Question: ${text || "Analyse ce fichier et explique son contenu"}`;
+      
+      const result = await model.generateContent([prompt, filePart]);
+      aiText = result.response.text();
+    } 
+    else {
+      console.log('💬 Message texte, appel backend avec contexte');
+      
+      try {
+        // ✅ CONSTRUCTION DE L'HISTORIQUE
+        const conversationHistory = messages
+          .slice(-10)  // Garder les 10 derniers messages
+          .map(msg => ({
+            role: msg.role === "user" ? "user" : "model",
+            content: msg.content
+          }));
+
+        console.log('📜 Historique envoyé:', conversationHistory);
+
+        // ✅ ENVOI AVEC HISTORIQUE
+        const response = await sendAIMessage(text, useUnilibContext, conversationHistory);
         
-        const result = await model.generateContent([prompt, filePart]);
-        aiText = result.response.text();
-      } 
-      else {
-        console.log('💬 Message texte, appel backend avec contexte');
+        console.log('✅ Réponse backend reçue:', response);
+        aiText = response.response;
+        contextUsed = response.context_used;
+      } catch (backendError: any) {
+        console.warn('❌ Backend indisponible:', backendError.message);
         
-        try {
-          const response = await sendAIMessage(text, useUnilibContext);
-          console.log('✅ Réponse backend reçue:', response);
-          aiText = response.response;
-          contextUsed = response.context_used;
-        } catch (backendError: any) {
-          console.warn('❌ Backend indisponible:', backendError.message);
+        if (genAI) {
+          console.log('🔄 Fallback vers Gemini client');
+          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
           
-          if (genAI) {
-            console.log('🔄 Fallback vers Gemini client');
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-            
-            const prompt = `Tu es l'assistant pédagogique de Unilib, la plateforme de l'IFRI au Bénin.\nQuestion: ${text}`;
-            const result = await model.generateContent(prompt);
-            aiText = result.response.text();
-          } else {
-            throw backendError;
-          }
+          const prompt = `Tu es l'assistant pédagogique de Unilib, une plateforme de collection de ressources de l'IFRI au Bénin.\nQuestion: ${text}`;
+          const result = await model.generateContent(prompt);
+          aiText = result.response.text();
+        } else {
+          throw backendError;
         }
       }
-
-      const aiMsg: Message = { role: "ai", content: aiText, contextUsed };
-      setMessages(prev => [...prev, aiMsg]);
-
-    } catch (error: any) {
-      console.error('❌ Erreur IA:', error);
-      
-      let errorMessage = "Désolé, je rencontre un problème technique. 🔧";
-      
-      if (error.message?.includes('429') || error.message?.includes('quota')) {
-        errorMessage = "⏳ **L'assistant est très sollicité !** Le quota quotidien est atteint. Patientez 1 minute.";
-      } else if (error.message?.includes('404') || error.message?.includes('not found')) {
-        errorMessage = "🔧 **Modèle Gemini indisponible.** Contactez l'administrateur.";
-      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        errorMessage = "🔑 **Clé API invalide.** Contactez l'administrateur.";
-      }
-      
-      setMessages(prev => [...prev, { role: "ai", content: errorMessage }]);
-      
-      toast({
-        title: "Erreur",
-        description: error.message || "Erreur inconnue",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const aiMsg: Message = { role: "ai", content: aiText, contextUsed };
+    setMessages(prev => [...prev, aiMsg]);
+
+  } catch (error: any) {
+    console.error('❌ Erreur IA:', error);
+    
+    let errorMessage = "Désolé, je rencontre un problème technique. 🔧";
+    
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      errorMessage = "⏳ **L'assistant est très sollicité !** Le quota quotidien est atteint. Patientez 1 minute.";
+    } else if (error.message?.includes('404') || error.message?.includes('not found')) {
+      errorMessage = "🔧 **Modèle Gemini indisponible.** Contactez l'administrateur.";
+    } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+      errorMessage = "🔑 **Clé API invalide.** Contactez l'administrateur.";
+    }
+    
+    setMessages(prev => [...prev, { role: "ai", content: errorMessage }]);
+    
+    toast({
+      title: "Erreur",
+      description: error.message || "Erreur inconnue",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

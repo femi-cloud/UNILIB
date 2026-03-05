@@ -248,10 +248,11 @@ class EmploiDuTempsViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def ai_chat(request):
     """
-    Endpoint IA avec contexte des ressources Unilib
+    Endpoint IA avec contexte des ressources Unilib + historique
     """
     user_message = request.data.get('message', '')
     include_resources = request.data.get('include_resources', True)
+    conversation_history = request.data.get('history', [])  # ✅ Récupérer l'historique
     
     if not user_message:
         return Response({'error': 'Message requis'}, status=400)
@@ -265,11 +266,22 @@ def ai_chat(request):
         # ✅ Construire le contexte des ressources
         context = build_resources_context(request.user) if include_resources else ""
         
-        # ✅ Construire le prompt enrichi
-        prompt = build_ai_prompt(user_message, context, request.user)
+        # ✅ Vérifier si c'est le premier message
+        is_first_message = len(conversation_history) == 0
         
-        # ✅ Appeler Gemini API
-        response = call_gemini_api(api_key, prompt)
+        if is_first_message:
+            # Premier message : prompt complet avec contexte
+            prompt = build_ai_prompt(user_message, context, request.user)
+            response = call_gemini_api(api_key, prompt)
+        else:
+            # Messages suivants : utiliser l'historique
+            response = call_gemini_api_with_history(
+                api_key, 
+                user_message, 
+                context, 
+                request.user, 
+                conversation_history
+            )
         
         return Response({
             'response': response,
@@ -287,13 +299,12 @@ def build_resources_context(user):
     """
     context_parts = []
     
-    # 📚 Ressources (cours, TD, TP, examens)
+    # 📚 Ressources
     resources = Resource.objects.all().order_by('-created_at')[:50]
     
     if resources.exists():
         context_parts.append("📚 RESSOURCES DISPONIBLES SUR UNILIB :")
         
-        # Grouper par matière
         matieres = {}
         for r in resources:
             if r.matiere not in matieres:
@@ -310,7 +321,6 @@ def build_resources_context(user):
         for matiere, items in matieres.items():
             context_parts.append(f"\n  📖 {matiere}:")
             for item in items[:5]:
-                # ✅ Format: [TITRE](resource:ID)
                 context_parts.append(
                     f"    - [{item['titre']}](resource:{item['id']}) ({item['type']}) - {item['filiere']} {item['promotion']} S{item['semestre']}"
                 )
@@ -322,12 +332,11 @@ def build_resources_context(user):
         context_parts.append("\n\n🎯 COURS PRATIQUES DISPONIBLES :")
         for cp in cours_pratiques:
             stack = ', '.join(cp.stack) if isinstance(cp.stack, list) else str(cp.stack)
-            # ✅ Format: [TITRE](cours:ID)
             context_parts.append(
                 f"  - [{cp.titre}](cours:{cp.id}) ({cp.get_difficulte_display()}) - Technologies: {stack}"
             )
     
-    # 📊 Statistiques globales
+    # 📊 Statistiques
     stats = {
         'total_resources': Resource.objects.count(),
         'total_cours_pratiques': CoursPratique.objects.count(),
@@ -342,9 +351,10 @@ def build_resources_context(user):
     return '\n'.join(context_parts)
 
 
-def build_ai_prompt(user_message, context, user):
+def build_ai_prompt_system(context, user):
     """
-    Construit le prompt complet pour Gemini
+    Construit le prompt système (instructions générales)
+    Utilisé pour les messages suivants avec historique
     """
     user_info = f"""
 👤 ÉTUDIANT :
@@ -353,7 +363,7 @@ def build_ai_prompt(user_message, context, user):
 - Promotion : {user.promotion.upper() if user.promotion else 'Non spécifiée'}
 """
     
-    prompt = f"""Tu es l'assistant pédagogique officiel de **Unilib**, la plateforme de ressources de l'**IFRI** (Institut de Formation et de Recherche en Informatique) au Bénin.
+    system_prompt = f"""Tu es l'assistant pédagogique officiel de **Unilib**, la plateforme de ressources de l'**IFRI** au Bénin.
 
 {user_info}
 
@@ -364,34 +374,46 @@ Tu accompagnes cet étudiant dans son apprentissage. Tu dois **combiner** les re
 
 📚 RÈGLES POUR LES RESSOURCES UNILIB :
 1. **Si des ressources Unilib sont pertinentes** → cite-les en utilisant EXACTEMENT le format : [Titre](resource:ID) ou [Titre](cours:ID)
-2. **Copie le lien tel quel** depuis la liste ci-dessus (ne modifie RIEN)
+2. **Copie le lien tel quel** depuis la liste ci-dessus
 3. **NE FABRIQUE JAMAIS** de faux liens
 
 💡 RÈGLES POUR LES CONNAISSANCES GÉNÉRALES :
-4. **Si aucune ressource Unilib ne correspond EXACTEMENT** → utilise tes connaissances pour donner une **réponse pédagogique complète**
-5. **Tu peux combiner** : citer une ressource Unilib proche + expliquer avec tes connaissances
-6. **Exemples de réponses hybrides :**
-   - "Sur Unilib, nous avons [Cours Python](resource:abc). En complément, voici les concepts clés à maîtriser : variables, boucles..."
-   - "Je n'ai pas de cours spécifique sur ce sujet dans Unilib, mais je peux t'expliquer : ..."
+4. **Si aucune ressource Unilib ne correspond EXACTEMENT** → utilise tes connaissances pour donner une réponse pédagogique complète
+5. **Tu peux combiner** : citer une ressource Unilib proche + expliquer avec tes connaissances + aider explicitement l'apprenant
 
 📝 FORMAT DE RÉPONSE :
+- **NE TE PRÉSENTE PAS À CHAQUE MESSAGE** (la conversation est continue)
+- **SOIS DIRECT ET NATUREL** comme dans une vraie conversation
 - Structure ta réponse en **sections claires**
 - Utilise le **markdown** : **gras**, *italique*, listes à puces
 - **Personnalise** selon la filière et promotion de l'étudiant
 - Réponds en **français** ou en **anglais** selon le prompt de l'utilisateur
 - Sois **pédagogue** et **encourageant**
 
+Réponds de manière **complète et utile**, en citant les ressources Unilib quand elles existent, ET en apportant tes connaissances pédagogiques quand nécessaire."""
+
+    return system_prompt
+
+
+def build_ai_prompt(user_message, context, user):
+    """
+    Construit le prompt complet pour le PREMIER message
+    """
+    system_instructions = build_ai_prompt_system(context, user)
+    
+    prompt = f"""{system_instructions}
+
 ❓ QUESTION DE L'ÉTUDIANT :
 {user_message}
 
-Réponds de manière **complète et utile**, en citant les ressources Unilib quand elles existent, ET en apportant tes connaissances pédagogiques quand nécessaire."""
+Réponds de manière **complète et utile**."""
 
     return prompt
 
 
 def call_gemini_api(api_key, prompt):
     """
-    Appelle l'API Gemini et retourne la réponse
+    Appelle l'API Gemini pour le premier message (sans historique)
     """
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
@@ -399,6 +421,53 @@ def call_gemini_api(api_key, prompt):
         "contents": [{
             "parts": [{"text": prompt}]
         }],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 8192,
+        }
+    }
+    
+    response = requests.post(url, json=payload, timeout=60)
+    response.raise_for_status()
+    
+    data = response.json()
+    
+    if 'candidates' in data and len(data['candidates']) > 0:
+        return data['candidates'][0]['content']['parts'][0]['text']
+    else:
+        raise Exception("Réponse invalide de Gemini")
+
+
+def call_gemini_api_with_history(api_key, user_message, context, user, conversation_history):
+    """
+    Appelle l'API Gemini avec l'historique de conversation
+    """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+    
+    # ✅ Construire le prompt système
+    system_instruction = build_ai_prompt_system(context, user)
+    
+    # ✅ Construire les messages avec historique
+    contents = []
+    
+    # Ajouter l'historique
+    for msg in conversation_history:
+        contents.append({
+            "role": msg['role'],
+            "parts": [{"text": msg['content']}]
+        })
+    
+    # Ajouter le nouveau message utilisateur
+    contents.append({
+        "role": "user",
+        "parts": [{"text": user_message}]
+    })
+    
+    payload = {
+        "contents": contents,
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
         "generationConfig": {
             "temperature": 0.7,
             "maxOutputTokens": 8192,

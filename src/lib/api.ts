@@ -429,9 +429,12 @@ export const markNotificationRead = async (id: number) => {
   return handleResponse(response);
 };
 
+// src/lib/api.ts
+
 export const sendAIMessage = async (
   message: string, 
-  includeResources: boolean = true
+  includeResources: boolean = true,
+  conversationHistory: Array<{role: string, content: string}> = []  // ✅ Ajout
 ): Promise<{ response: string; context_used: boolean }> => {
   const token = localStorage.getItem('access_token');
   
@@ -443,7 +446,8 @@ export const sendAIMessage = async (
     },
     body: JSON.stringify({ 
       message, 
-      include_resources: includeResources 
+      include_resources: includeResources,
+      history: conversationHistory  // ✅ Ajout
     }),
   });
   
