@@ -44,7 +44,6 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            {/* <Route path="/" element={<EFriAI />} /> */}
             <Route path="/e-fri" element={<EFriLanding />} />
             <Route path="/e-fri/connexion" element={<EFriLogin />} />
             <Route path="/e-fri/inscription" element={<EFriSignup />} />
