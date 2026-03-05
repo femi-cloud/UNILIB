@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom"; // ✅ Ajout
+import { useSearchParams } from "react-router-dom";
 import { FolderArchive, Cpu, Zap, Link as LinkIcon, Download, Info, ArrowRight, Plus, X, Trash2 } from "lucide-react";
 import { getCoursPratiques, uploadCoursPratique, deleteCoursPratique } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
@@ -33,7 +33,6 @@ const EFriProjects = () => {
   const { user } = useSession();
   const { toast } = useToast();
   
-  // ✅ HIGHLIGHT depuis URL
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get("highlight");
   const highlightedRef = useRef<HTMLDivElement>(null);
@@ -66,7 +65,6 @@ const EFriProjects = () => {
     return [];
   };
 
-  // Charger les cours pratiques
   useEffect(() => {
     async function fetchCours() {
       setLoading(true);
@@ -86,7 +84,6 @@ const EFriProjects = () => {
     fetchCours();
   }, []);
 
-  // ✅ SCROLL + FLASH quand highlight présent
   useEffect(() => {
     if (highlightId && cours.length > 0) {
       setFlashId(highlightId);
@@ -257,7 +254,146 @@ const EFriProjects = () => {
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              {/* ... Form content (unchanged) ... */}
+              <DialogHeader>
+                <DialogTitle>Nouveau Cours Pratique</DialogTitle>
+                <DialogDescription>
+                  Remplissez les informations pour publier un nouveau support pratique.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Titre du cours</label>
+                    <input
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                      placeholder="Ex: Programmation Mobile React Native"
+                      value={newCours.titre}
+                      onChange={e => setNewCours({ ...newCours, titre: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Difficulté</label>
+                    <select
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                      value={newCours.difficulte}
+                      onChange={e => setNewCours({ ...newCours, difficulte: e.target.value })}
+                    >
+                      <option>Débutant</option>
+                      <option>Intermédiaire</option>
+                      <option>Avancé</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background min-h-[80px]"
+                    placeholder="Résumé du cours..."
+                    value={newCours.description}
+                    onChange={e => setNewCours({ ...newCours, description: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Technologies (séparées par des virgules)</label>
+                    <input
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                      placeholder="React, Expo..."
+                      value={newCours.stack}
+                      onChange={e => setNewCours({ ...newCours, stack: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Modules / APIs (séparés par des virgules)</label>
+                    <input
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background"
+                      placeholder="Firebase, MapBox..."
+                      value={newCours.apis}
+                      onChange={e => setNewCours({ ...newCours, apis: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 p-4 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <FolderArchive size={16} className="text-secondary" /> Pack du cours (.zip)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".zip"
+                    className="hidden"
+                    id="zip-upload"
+                    onChange={handleFileChange}
+                  />
+                  <label
+                    htmlFor="zip-upload"
+                    className="flex flex-col items-center justify-center gap-2 py-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-lg"
+                  >
+                    {selectedFile ? (
+                      <div className="flex items-center gap-2 text-primary font-medium">
+                        <Download size={20} />
+                        <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Plus className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Cliquez pour téléverser le fichier .zip</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold flex items-center gap-2">
+                      <LinkIcon size={16} className="text-muted-foreground" /> Liens utiles
+                    </label>
+                    <button
+                      onClick={handleAddLink}
+                      className="text-xs text-secondary hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Ajouter un lien
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {newCours.liens.map((link, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <input
+                          className="flex-1 px-3 py-1.5 rounded-md border border-input bg-background text-xs"
+                          placeholder="Libellé (ex: Documentation)"
+                          value={link.label}
+                          onChange={(e) => handleLinkChange(index, "label", e.target.value)}
+                        />
+                        <input
+                          className="flex-[2] px-3 py-1.5 rounded-md border border-input bg-background text-xs"
+                          placeholder="URL (https://...)"
+                          value={link.url}
+                          onChange={(e) => handleLinkChange(index, "url", e.target.value)}
+                        />
+                        {newCours.liens.length > 1 && (
+                          <button
+                            onClick={() => handleRemoveLink(index)}
+                            className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <button
+                  onClick={handleAddCours}
+                  className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-inter font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
+                >
+                  Publier le cours pratique
+                </button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
@@ -268,15 +404,14 @@ const EFriProjects = () => {
           <Dialog key={p.id}>
             <DialogTrigger asChild>
               <div
-                ref={String(p.id) === highlightId ? highlightedRef : null} // ✅ Scroll target
+                ref={String(p.id) === highlightId ? highlightedRef : null}
                 className={`bg-background rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-500 overflow-hidden cursor-pointer group ${
                   String(p.id) === flashId
-                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30 ring-2 ring-purple-500/50 shadow-lg shadow-purple-500/20" // ✅ Flash effect
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30 ring-2 ring-purple-500/50 shadow-lg shadow-purple-500/20"
                     : "border-border"
                 }`}
                 onClick={() => setSelectedProject(p)}
               >
-                {/* Banner */}
                 <div className="h-40 bg-secondary/5 flex items-center justify-center transition-colors group-hover:bg-secondary/10">
                   <FolderArchive size={48} className="text-secondary/40" />
                 </div>
@@ -317,8 +452,124 @@ const EFriProjects = () => {
               </div>
             </DialogTrigger>
 
+            {/* ✅ MODAL DÉTAILS DU COURS - CONTENU COMPLET */}
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              {/* ... Modal content (unchanged) ... */}
+              {selectedProject && (
+                <>
+                  <DialogHeader>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-inter font-medium ${diffColors[selectedProject.difficulte as keyof typeof diffColors]}`}>
+                        {selectedProject.difficulte}
+                      </span>
+                    </div>
+                    <DialogTitle className="font-poppins text-2xl">{selectedProject.titre}</DialogTitle>
+                    <DialogDescription className="font-inter text-sm pt-2">
+                      {selectedProject.description}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-6 py-4">
+                    {/* Stack & APIs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <h4 className="flex items-center gap-2 font-poppins font-semibold text-sm text-foreground">
+                          <Cpu size={16} className="text-secondary" /> Concepts clés
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {asArray(selectedProject.stack).map((t: string) => (
+                            <span key={t} className="px-2.5 py-1 rounded bg-secondary/10 text-secondary font-inter text-xs">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <h4 className="flex items-center gap-2 font-poppins font-semibold text-sm text-foreground">
+                          <Zap size={16} className="text-accent" /> Modules pratiques
+                        </h4>
+                        <ul className="space-y-1">
+                          {asArray(selectedProject.apis).map((a: string) => (
+                            <li key={a} className="font-inter text-xs text-muted-foreground flex items-center gap-2">
+                              <div className="w-1 h-1 rounded-full bg-accent" /> {a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Steps */}
+                    <div className="bg-muted/50 rounded-xl p-5 space-y-3">
+                      <h4 className="flex items-center gap-2 font-poppins font-semibold text-sm text-foreground">
+                        <Info size={16} className="text-primary" /> Guide d'apprentissage
+                      </h4>
+                      <div className="space-y-3">
+                        {asArray(selectedProject.etapes).map((e: string, i: number) => (
+                          <div key={i} className="flex gap-3">
+                            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-background border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                              {i + 1}
+                            </span>
+                            <p className="font-inter text-xs text-foreground/80 leading-relaxed">{e}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Links */}
+                    {selectedProject.liens && selectedProject.liens.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="flex items-center gap-2 font-poppins font-semibold text-sm text-foreground">
+                          <LinkIcon size={16} className="text-muted-foreground" /> Liens utiles
+                        </h4>
+                        <div className="flex flex-wrap gap-4">
+                          {selectedProject.liens.map((l: any) => (
+                            <a
+                              key={l.url}
+                              href={l.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 font-inter text-xs text-secondary hover:underline"
+                            >
+                              {l.label} <ArrowRight size={10} className="-rotate-45" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Download */}
+                    <div className="pt-4">
+                      <button
+                        onClick={() => {
+                          trackDownload();
+                          
+                          const zipUrl = selectedProject.fichier_zip;
+                          
+                          if (zipUrl) {
+                            window.open(zipUrl, '_blank');
+                            
+                            toast({
+                              title: "Téléchargement démarré",
+                              description: "Le fichier ZIP est en cours de téléchargement.",
+                            });
+                          } else {
+                            toast({
+                              title: "Fichier non disponible",
+                              description: "Aucun pack de cours n'a été téléversé pour ce cours.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-inter font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
+                      >
+                        <Download size={18} /> Télécharger les ressources (.zip)
+                      </button>
+                      <p className="font-inter text-[10px] text-muted-foreground text-center mt-3">
+                        Contient les slides, les énoncés de TP et les corrigés de référence.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </DialogContent>
           </Dialog>
         ))}
