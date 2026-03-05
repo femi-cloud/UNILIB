@@ -469,8 +469,7 @@ Question: ${text || "Analyse ce fichier et explique son contenu"}`;
 
         {/* ✅ FORMULAIRE ADAPTÉ À TON DESIGN */}
         <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3 border-t border-border bg-background">
-          <div className="w-[90%] md:w-[70%] max-w-[800px] h-16 bg-background mx-auto flex items-center border-2 border-border rounded-full shadow-md shadow-neutral-100 p-3">
-            <input
+          <div className="w-[90%] md:w-[70%] max-w-[800px] h-16 bg-none mx-auto flex items-center border-2 border-border rounded-full shadow-md p-3">            <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileSelect}
