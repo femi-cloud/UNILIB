@@ -29,7 +29,7 @@ dist-ssr
 
 .env*
 
-unilib_backend\.env
+unilib_backend\.env*
 
 unilib_backend/media/
 UNILIB.zip
