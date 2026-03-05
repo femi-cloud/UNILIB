@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, BookOpen, FolderKanban, Calendar, Bot, Upload, Settings, LogOut, Search, Bell, Menu, X, CheckCircle2, AlertCircle, Info, ArrowLeft } from "lucide-react";
 import EFriLogo from "@/components/EFriLogo";
+import SpinningBlobs from "@/components/ui/spinningBlobs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useSession } from "@/hooks/use-session";
@@ -12,7 +13,12 @@ const navItems = [
   { label: "Ressources", icon: BookOpen, path: "/e-fri/ressources" },
   { label: "Cours Pratiques", icon: FolderKanban, path: "/e-fri/cours-pratiques" },
   { label: "Emploi du Temps", icon: Calendar, path: "/e-fri/emploi-du-temps" },
-  { label: "IA Assistant", icon: Bot, path: "/e-fri/ia" },
+  { 
+    label: "IA Assistant", 
+    icon: Bot,
+    path: "/e-fri/ia",
+    customIcon: true
+  },
   { label: "Téléverser", icon: Upload, path: "/e-fri/televerser", roles: ["responsable", "admin"] },
   { 
     label: "Administration", 
@@ -36,7 +42,6 @@ const DashboardLayout = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  // ✅ RECHERCHE GLOBALE
   const handleGlobalSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (globalSearch.trim()) {
@@ -45,30 +50,29 @@ const DashboardLayout = () => {
     }
   };
 
-// Dans le composant
-useEffect(() => {
-  const loadNotifs = async () => {
+  useEffect(() => {
+    const loadNotifs = async () => {
+      try {
+        const data = await getNotifications();
+        setNotifications(data);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
+    };
+
+    loadNotifs();
+    const interval = setInterval(loadNotifs, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const markAsRead = async (id: number) => {
     try {
-      const data = await getNotifications();
-      setNotifications(data);
+      await markNotificationRead(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      console.error('Error:', error);
     }
   };
-
-  loadNotifs();
-  const interval = setInterval(loadNotifs, 30000); // 30s
-  return () => clearInterval(interval);
-}, []);
-
-const markAsRead = async (id: number) => {
-  try {
-    await markNotificationRead(id);
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  } catch (error) {
-    console.error('Error:', error);
-  }
-};
 
   const handleLogout = () => {
     logout();
@@ -114,35 +118,47 @@ const markAsRead = async (id: number) => {
                 const linkProps = {
                   key: item.path,
                   onClick: () => setSidebarOpen(false),
-                  className: `flex items-center gap-3 px-3 py-2.5 rounded-lg font-inter text-sm transition-colors ${isActive(item.path)
-                    ? "bg-[#E3F2FD] text-secondary border-l-[3px] border-secondary font-medium"
-                    : "text-foreground hover:bg-muted"
-                    }`
+                  className: `flex items-center gap-3 px-3 py-2.5 rounded-lg font-inter text-sm transition-colors ${
+                    isActive(item.path)
+                      ? "bg-[#E3F2FD] text-secondary border-l-[3px] border-secondary font-medium"
+                      : "text-foreground hover:bg-muted"
+                  }`
                 };
+
+                const content = (
+                  <>
+                    {item.customIcon ? (
+                      <div className={`-ml-2 ${isActive(item.path) ? '' : 'opacity-100'}`}>
+                        
+                        <SpinningBlobs 
+                          disabled={!isActive(item.path)} 
+                          size="small" 
+                        />
+                      </div>
+                    ) : (
+                      <item.icon size={18} />
+                    )}
+                    {item.label}
+                  </>
+                );
 
                 if (item.external) {
                   return (
                     <a
-                    key={item.path}
+                      key={item.path}
                       {...linkProps}
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <item.icon size={18} />
-                      {item.label}
+                      {content}
                     </a>
                   );
                 }
 
                 return (
-                  <Link
-                  key={item.path}
-                    {...linkProps}
-                    to={item.path}
-                  >
-                    <item.icon size={18} />
-                    {item.label}
+                  <Link key={item.path} {...linkProps} to={item.path}>
+                    {content}
                   </Link>
                 );
               })}
@@ -187,7 +203,6 @@ const markAsRead = async (id: number) => {
               e-FRI / <span className="text-foreground">{navItems.find(n => isActive(n.path))?.label || "Page"}</span>
             </div>
 
-            {/* ✅ RECHERCHE GLOBALE */}
             <form onSubmit={handleGlobalSearch} className="flex-1 max-w-sm lg:max-w-md mx-auto px-2">
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -296,10 +311,20 @@ const markAsRead = async (id: number) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex-1 flex flex-col items-center py-2 text-[10px] font-inter ${isActive(item.path) ? "text-secondary" : "text-muted-foreground"
-                  }`}
+                className={`flex-1 flex flex-col items-center py-2 text-[10px] font-inter ${
+                  isActive(item.path) ? "text-secondary" : "text-muted-foreground"
+                }`}
               >
-                <item.icon size={20} />
+                {item.customIcon ? (
+                  <div className={`${isActive(item.path) ? '' : 'opacity-60'}`}>
+                    <SpinningBlobs 
+                      disabled={!isActive(item.path)} 
+                      size="tiny" 
+                    />
+                  </div>
+                ) : (
+                  <item.icon size={20} />
+                )}
                 <span className="mt-0.5">{item.label.split(" ")[0]}</span>
               </Link>
             ))}

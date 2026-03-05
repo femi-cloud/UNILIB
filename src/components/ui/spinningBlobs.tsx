@@ -1,14 +1,22 @@
+// src/components/ui/spinningBlobs.tsx
+
 import React from 'react'
 
 interface SpinningBlobsProps {
   disabled?: boolean;
-  size?: "small" | "medium" | "large";
+  size?: "tiny" | "small" | "medium" | "large";  // ✅ Ajout "tiny"
 }
 
 function SpinningBlobs({ disabled = false, size = "medium" }: SpinningBlobsProps) {
   
-  // Configuration des tailles
   const sizeConfig = {
+    tiny: { 
+      container: "w-5 h-5",
+      innerBlur: "w-3 h-3",
+      innerCircle: "w-2.5 h-2.5",
+      eyes: "w-0.5 h-0.5",
+      eyeGap: "gap-0.5",
+    },
     small: {
       container: "w-8 h-8",
       innerBlur: "w-5 h-5",
@@ -111,13 +119,25 @@ function SpinningBlobs({ disabled = false, size = "medium" }: SpinningBlobsProps
         />
       </svg>
 
-      {/* Cercle blanc flou */}
-      <div className={`absolute bg-white z-10 ${config.innerBlur} blur-sm rounded-full flex items-center justify-center transition-all duration-200`}></div>
-      
-      {/* Cercle blanc avec yeux */}
-      <div className={`relative bg-white p-1 z-20 ${config.innerCircle} rounded-full flex flex-row items-center justify-center ${config.eyeGap} transition-all duration-200`}>
-        <div className={`${config.eyes} rounded-[100%] bg-black`}></div>
-        <div className={`${config.eyes} rounded-[100%] bg-black`}></div>
+      {/* ✅ ISOLATION: Empêche le blend mode de toucher le visage */}
+      <div 
+        className="absolute z-20 flex items-center justify-center"
+        style={{ isolation: "isolate" }}  // ✅ Crucial !
+      >
+        {/* Cercle blanc flou */}
+        <div 
+          className={`absolute bg-white ${config.innerBlur} blur-sm rounded-full`}
+          style={{ opacity: disabled ? 0.3 : 1 }}
+        />
+        
+        {/* Cercle blanc avec yeux */}
+        <div 
+          className={`relative bg-white ${config.innerCircle} rounded-full flex items-center justify-center ${config.eyeGap}`}
+          style={{ opacity: disabled ? 0.5 : 1 }}
+        >
+          <div className={`${config.eyes} rounded-full bg-black`} />
+          <div className={`${config.eyes} rounded-full bg-black`} />
+        </div>
       </div>
 
       <style>{`
