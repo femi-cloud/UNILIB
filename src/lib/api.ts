@@ -428,3 +428,29 @@ export const markNotificationRead = async (id: number) => {
   });
   return handleResponse(response);
 };
+
+export const sendAIMessage = async (
+  message: string, 
+  includeResources: boolean = true
+): Promise<{ response: string; context_used: boolean }> => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch(`${API_URL}/ai/chat/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      message, 
+      include_resources: includeResources 
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Erreur serveur' }));
+    throw new Error(error.error || error.detail || 'Erreur de l\'assistant IA');
+  }
+  
+  return response.json();
+};

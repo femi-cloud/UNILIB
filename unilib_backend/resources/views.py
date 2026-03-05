@@ -6,6 +6,13 @@ from .models import Resource, CoursPratique, EmploiDuTemps
 from .serializers import ResourceSerializer, CoursPratiqueSerializer, EmploiDuTempsSerializer
 import traceback
 from authentication.models import User, Notification
+import requests
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ResourceViewSet(viewsets.ModelViewSet):
@@ -235,3 +242,158 @@ class EmploiDuTempsViewSet(viewsets.ModelViewSet):
             for user in users
         ]
         Notification.objects.bulk_create(notifications)
+        
+        
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ai_chat(request):
+    """
+    Endpoint IA avec contexte des ressources Unilib
+    """
+    user_message = request.data.get('message', '')
+    include_resources = request.data.get('include_resources', True)
+    
+    if not user_message:
+        return Response({'error': 'Message requis'}, status=400)
+    
+    # Récupérer la clé API Gemini
+    api_key = getattr(settings, 'VITE_GEMINI_API_KEY', None)
+    if not api_key:
+        return Response({'error': 'API Gemini non configurée'}, status=500)
+    
+    try:
+        # ✅ Construire le contexte des ressources
+        context = build_resources_context(request.user) if include_resources else ""
+        
+        # ✅ Construire le prompt enrichi
+        prompt = build_ai_prompt(user_message, context, request.user)
+        
+        # ✅ Appeler Gemini API
+        response = call_gemini_api(api_key, prompt)
+        
+        return Response({
+            'response': response,
+            'context_used': bool(context)
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur AI Chat: {str(e)}")
+        return Response({'error': str(e)}, status=500)
+
+
+def build_resources_context(user):
+    """
+    Construit un contexte textuel des ressources disponibles
+    """
+    context_parts = []
+    
+    # 📚 Ressources (cours, TD, TP, examens)
+    resources = Resource.objects.all().order_by('-created_at')[:50]  # Limiter pour ne pas dépasser les tokens
+    
+    if resources.exists():
+        context_parts.append("📚 RESSOURCES DISPONIBLES SUR UNILIB :")
+        
+        # Grouper par matière
+        matieres = {}
+        for r in resources:
+            if r.matiere not in matieres:
+                matieres[r.matiere] = []
+            matieres[r.matiere].append({
+                'titre': r.titre,
+                'type': r.get_type_ressource_display(),
+                'filiere': r.get_filiere_display(),
+                'promotion': r.get_promotion_display(),
+                'semestre': r.semestre,
+            })
+        
+        for matiere, items in matieres.items():
+            context_parts.append(f"\n  📖 {matiere}:")
+            for item in items[:5]:  # Max 5 par matière
+                context_parts.append(f"    - {item['titre']} ({item['type']}) - {item['filiere']} {item['promotion']} S{item['semestre']}")
+    
+    # 🎯 Cours pratiques
+    cours_pratiques = CoursPratique.objects.all().order_by('-created_at')[:20]
+    
+    if cours_pratiques.exists():
+        context_parts.append("\n\n🎯 COURS PRATIQUES DISPONIBLES :")
+        for cp in cours_pratiques:
+            stack = ', '.join(cp.stack) if isinstance(cp.stack, list) else cp.stack
+            context_parts.append(f"  - {cp.titre} ({cp.get_difficulte_display()}) - Technologies: {stack}")
+    
+    # 📊 Statistiques globales
+    stats = {
+        'total_resources': Resource.objects.count(),
+        'total_cours_pratiques': CoursPratique.objects.count(),
+        'matieres': Resource.objects.values_list('matiere', flat=True).distinct().count(),
+    }
+    
+    context_parts.append(f"\n\n📊 STATISTIQUES UNILIB :")
+    context_parts.append(f"  - {stats['total_resources']} ressources disponibles")
+    context_parts.append(f"  - {stats['total_cours_pratiques']} cours pratiques")
+    context_parts.append(f"  - {stats['matieres']} matières couvertes")
+    
+    return '\n'.join(context_parts)
+
+
+def build_ai_prompt(user_message, context, user):
+    """
+    Construit le prompt complet pour Gemini
+    """
+    user_info = f"""
+👤 ÉTUDIANT :
+- Nom : {user.prenom} {user.nom}
+- Filière : {user.get_filiere_display() if hasattr(user, 'get_filiere_display') else user.filiere}
+- Promotion : {user.promotion.upper() if user.promotion else 'Non spécifiée'}
+"""
+    
+    prompt = f"""Tu es l'assistant pédagogique officiel de **Unilib**, la plateforme de ressources de l'**IFRI** (Institut de Formation et de Recherche en Informatique) au Bénin.
+
+{user_info}
+
+{context}
+
+🎓 TON RÔLE :
+Tu accompagnes cet étudiant dans son apprentissage. Tu connais les ressources disponibles sur Unilib et tu peux les recommander.
+
+📚 INSTRUCTIONS :
+1. **Recommande des ressources** : Si une ressource pertinente existe sur Unilib, mentionne-la !
+2. **Personnalise** : Adapte ta réponse à la filière et promotion de l'étudiant
+3. **Encourage** : Motive l'étudiant à utiliser les ressources de Unilib
+4. **Sois précis** : Mentionne les titres exacts des cours/ressources disponibles
+
+✅ EXEMPLE DE RÉPONSE :
+"Pour approfondir les algorithmes de tri, je vous recommande de consulter le cours '{'{'}titre exact{'}'}' disponible sur Unilib dans la section {'{'}matière{'}'}. Ce cours est particulièrement adapté aux étudiants de {'{'}filière{'}'} comme vous !"
+
+❓ QUESTION DE L'ÉTUDIANT :
+{user_message}
+
+Réponds de manière complète, personnalisée et en mentionnant les ressources Unilib pertinentes si elles existent."""
+
+    return prompt
+
+
+def call_gemini_api(api_key, prompt):
+    """
+    Appelle l'API Gemini et retourne la réponse
+    """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 8192,
+        }
+    }
+    
+    response = requests.post(url, json=payload, timeout=60)
+    response.raise_for_status()
+    
+    data = response.json()
+    
+    if 'candidates' in data and len(data['candidates']) > 0:
+        return data['candidates'][0]['content']['parts'][0]['text']
+    else:
+        raise Exception("Réponse invalide de Gemini")

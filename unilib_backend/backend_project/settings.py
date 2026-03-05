@@ -207,3 +207,11 @@ if USE_B2_STORAGE:
     print(f"🔒 URLs signées activées (AWS_QUERYSTRING_AUTH=True)")
 else:
     print("⚠️ Backblaze B2 non configuré")
+    
+    
+VITE_GEMINI_API_KEY = os.environ.get('VITE_GEMINI_API_KEY')
+
+if VITE_GEMINI_API_KEY:
+    print("✅ Gemini API configurée")
+else:
+    print("⚠️ Gemini API non configurée")
