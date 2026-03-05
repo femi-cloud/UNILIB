@@ -283,12 +283,12 @@ def ai_chat(request):
 
 def build_resources_context(user):
     """
-    Construit un contexte textuel des ressources disponibles
+    Construit un contexte textuel des ressources disponibles avec leurs IDs
     """
     context_parts = []
     
     # 📚 Ressources (cours, TD, TP, examens)
-    resources = Resource.objects.all().order_by('-created_at')[:50]  # Limiter pour ne pas dépasser les tokens
+    resources = Resource.objects.all().order_by('-created_at')[:50]
     
     if resources.exists():
         context_parts.append("📚 RESSOURCES DISPONIBLES SUR UNILIB :")
@@ -299,6 +299,7 @@ def build_resources_context(user):
             if r.matiere not in matieres:
                 matieres[r.matiere] = []
             matieres[r.matiere].append({
+                'id': str(r.id),
                 'titre': r.titre,
                 'type': r.get_type_ressource_display(),
                 'filiere': r.get_filiere_display(),
@@ -308,8 +309,11 @@ def build_resources_context(user):
         
         for matiere, items in matieres.items():
             context_parts.append(f"\n  📖 {matiere}:")
-            for item in items[:5]:  # Max 5 par matière
-                context_parts.append(f"    - {item['titre']} ({item['type']}) - {item['filiere']} {item['promotion']} S{item['semestre']}")
+            for item in items[:5]:
+                # ✅ Format: [TITRE](resource:ID)
+                context_parts.append(
+                    f"    - [{item['titre']}](resource:{item['id']}) ({item['type']}) - {item['filiere']} {item['promotion']} S{item['semestre']}"
+                )
     
     # 🎯 Cours pratiques
     cours_pratiques = CoursPratique.objects.all().order_by('-created_at')[:20]
@@ -317,8 +321,11 @@ def build_resources_context(user):
     if cours_pratiques.exists():
         context_parts.append("\n\n🎯 COURS PRATIQUES DISPONIBLES :")
         for cp in cours_pratiques:
-            stack = ', '.join(cp.stack) if isinstance(cp.stack, list) else cp.stack
-            context_parts.append(f"  - {cp.titre} ({cp.get_difficulte_display()}) - Technologies: {stack}")
+            stack = ', '.join(cp.stack) if isinstance(cp.stack, list) else str(cp.stack)
+            # ✅ Format: [TITRE](cours:ID)
+            context_parts.append(
+                f"  - [{cp.titre}](cours:{cp.id}) ({cp.get_difficulte_display()}) - Technologies: {stack}"
+            )
     
     # 📊 Statistiques globales
     stats = {
@@ -353,21 +360,20 @@ def build_ai_prompt(user_message, context, user):
 {context}
 
 🎓 TON RÔLE :
-Tu accompagnes cet étudiant dans son apprentissage. Tu connais les ressources disponibles sur Unilib et tu peux les recommander.
+Tu accompagnes cet étudiant dans son apprentissage. Tu connais les ressources disponibles sur Unilib.
 
-📚 INSTRUCTIONS :
-1. **Recommande des ressources** : Si une ressource pertinente existe sur Unilib, mentionne-la !
-2. **Personnalise** : Adapte ta réponse à la filière et promotion de l'étudiant
-3. **Encourage** : Motive l'étudiant à utiliser les ressources de Unilib
-4. **Sois précis** : Mentionne les titres exacts des cours/ressources disponibles
-
-✅ EXEMPLE DE RÉPONSE :
-"Pour approfondir les algorithmes de tri, je vous recommande de consulter le cours '{'{'}titre exact{'}'}' disponible sur Unilib dans la section {'{'}matière{'}'}. Ce cours est particulièrement adapté aux étudiants de {'{'}filière{'}'} comme vous !"
+📚 INSTRUCTIONS TRÈS IMPORTANTES :
+1. **Quand tu cites une ressource**, tu DOIS utiliser EXACTEMENT le format de lien fourni ci-dessus : [Titre](resource:ID) ou [Titre](cours:ID)
+2. **Copie le lien tel quel** depuis la liste des ressources ci-dessus
+3. **Exemple correct** : "Je vous recommande [Introduction à Python](resource:abc-123-def) disponible sur Unilib."
+4. **Ne modifie PAS** le format des liens, garde-les exactement comme fournis
+5. **Personnalise** ta réponse à la filière et promotion de l'étudiant
+6. Réponds en **français**
 
 ❓ QUESTION DE L'ÉTUDIANT :
 {user_message}
 
-Réponds de manière complète, personnalisée et en mentionnant les ressources Unilib pertinentes si elles existent."""
+Réponds de manière complète et mentionne les ressources Unilib pertinentes avec leurs liens cliquables."""
 
     return prompt
 
@@ -376,7 +382,7 @@ def call_gemini_api(api_key, prompt):
     """
     Appelle l'API Gemini et retourne la réponse
     """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
     payload = {
         "contents": [{

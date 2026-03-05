@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom"; // ✅ Ajout pour highlight
 import { Download, FileText, Grid, List, Search, Clock, Trash2, Loader2 } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +27,6 @@ const promotions = ["Tous", "L1", "L2", "L3"];
 const semestres = ["Tous", "S1", "S2"];
 const types = ["Tous", "Cours", "TD", "TP", "Examen", "Rattrapage", "Correction"];
 
-// MAPPING BACKEND → FRONTEND
 const mapFiliereFromBackend = (filiere: string): string => {
   const mapping: Record<string, string> = {
     'toutes': 'Toutes',
@@ -59,22 +59,27 @@ const EFriResources = () => {
   const { user } = useSession();
   const { toast } = useToast();
   
+  // ✅ HIGHLIGHT depuis URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightedRef = useRef<HTMLDivElement>(null);
+  const [flashId, setFlashId] = useState<string | null>(null);
+  
   const [filiere, setFiliere] = useState("Tous");
   const [promotion, setPromotion] = useState("Tous");
   const [semestre, setSemestre] = useState("Tous");
   const [typeFilter, setTypeFilter] = useState("Tous");
-  const [searchInput, setSearchInput] = useState(""); // ✅ Ce que l'user tape
-  const [searchQuery, setSearchQuery] = useState(""); // ✅ Ce qui est envoyé à l'API
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   const [allResources, setAllResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false); // ✅ Spinner recherche
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const isAdmin = user?.role === "admin";
 
-  // ✅ HANDLER RECHERCHE (Enter)
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInput.trim());
@@ -83,7 +88,6 @@ const EFriResources = () => {
   // CHARGER LES RESSOURCES
   useEffect(() => {
     const fetchResources = async () => {
-      // ✅ Spinner uniquement pour la recherche
       if (searchQuery) {
         setIsSearching(true);
       } else {
@@ -136,7 +140,34 @@ const EFriResources = () => {
     }
   }, [user, filiere, promotion, semestre, typeFilter, searchQuery, toast]);
 
-  // TÉLÉCHARGEMENT
+  // ✅ SCROLL + FLASH quand highlight présent
+  useEffect(() => {
+    if (highlightId && allResources.length > 0) {
+      setFlashId(highlightId);
+
+      const timer = setTimeout(() => {
+        if (highlightedRef.current) {
+          highlightedRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 300);
+
+      const clearTimer = setTimeout(() => {
+        setFlashId(null);
+        searchParams.delete("highlight");
+        setSearchParams(searchParams, { replace: true });
+      }, 4000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [highlightId, allResources]);
+
+  // TÉLÉCHARGEMENT (CODE ORIGINAL INTACT)
   const trackDownload = () => {
     if (!user?.email) return;
     const key = `unilib_download_count_${user.email}`;
@@ -227,7 +258,6 @@ const EFriResources = () => {
             {semestres.map(s => <option key={s}>{s}</option>)}
           </select>
           
-          {/* ✅ FORM RECHERCHE avec Enter */}
           <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-0 sm:col-span-2 lg:col-span-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -237,7 +267,6 @@ const EFriResources = () => {
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-9 pr-10 py-2 rounded-lg border border-border bg-background font-inter text-sm outline-none focus:border-secondary shadow-inner"
             />
-            {/* ✅ SPINNER pendant recherche */}
             {isSearching && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -304,8 +333,13 @@ const EFriResources = () => {
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" : "space-y-3"}>
           {allResources.map(r => (
             <div 
-              key={r.id} 
-              className="group bg-background rounded-xl border border-border overflow-hidden hover:border-secondary hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300"
+              key={r.id}
+              ref={r.id === highlightId ? highlightedRef : null} // ✅ Scroll target
+              className={`group bg-background rounded-xl border overflow-hidden hover:border-secondary hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${
+                r.id === flashId
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20" // ✅ Flash effect
+                  : "border-border"
+              }`}
             >
               <div className="p-4 space-y-4">
                 <div className="flex items-start gap-3">
